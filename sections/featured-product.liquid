@@ -1,0 +1,331 @@
+{{ 'product.css' | asset_url | stylesheet_tag }}
+{{ 'featured-product.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign product = all_products[section.settings.featured_product]
+  assign first_3d_model = product.media | where: "media_type", "model" | first
+	assign product_form_id = 'product-form-' | append: section.id
+  assign product_form_class = 'main-product-form product-form-' | append: section.id
+
+  assign settings = section.settings
+  if product == empty
+      assign section_onboarding = true
+  endif
+  assign current_variant = product.selected_or_first_available_variant
+  assign show_thumbnails = settings.show_thumbnails
+  assign image_placement = section.settings.image_placement
+
+	capture is_preorder
+    render 'check-preorder', product: product
+  endcapture
+  if is_preorder == "true"
+    assign is_preorder = true
+  else
+    assign is_preorder = false
+  endif
+-%}
+
+{% capture class %}
+  {% if settings.show_quantity_selector %}
+    show_quantity_selector
+  {% else %}
+    hide_quantity_selector
+  {% endif %}
+  {% if settings.enable_payment_button %}
+    enable_payment_button
+  {% endif %}
+  {% if settings.show_share_buttons %}
+    show_share_buttons
+  {% endif %}
+{% endcapture %}
+
+{%- if first_3d_model -%}
+  <link
+    id="ModelViewerStyle"
+    rel="stylesheet"
+    href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css"
+    media="print"
+    onload="this.media='all'"
+  >
+{%- endif -%}
+
+<div
+  id="sf__featured-product-{{ section.id }}"
+  data-section-type="legacy-featured-product"
+  data-section-id="{{ section.id }}"
+  class="sf-featured-product {{ section.settings.custom_class }} {{ class | strip_newlines }}"
+>
+  <div
+    class="{{ section.settings.container }} section-my"
+    style="--column-gap: {{ section.settings.column_gap }}px; --column-gap-mobile: {{ section.settings.column_gap_mobile }}px;"
+  >
+    <div
+      class="sf-grid flex flex-wrap md:flex-nowrap sf-product-wrapper sf-prod__block{% if image_placement == 'right' %} flex-row-reverse{% endif %}"
+      data-view="featured-product"
+    >
+      <div class="sf-column w-full md:w-1/2">
+        {% unless section_onboarding %}
+          {% render 'product-media', section: section, media_layout: 'layout-4', product: product, show_thumbnails: show_thumbnails %}
+        {% else %}
+          <div style="--aspect-ratio: 1/1;">
+            {{ 'product-1' | placeholder_svg_tag: 'sf__placeholder-svg object-cover w-full h-full transition-all duration-500 group-hover:scale-105' }}
+          </div>
+        {% endunless %}
+      </div>
+      <div class="sf-column w-full md:w-1/2">
+        <div class="sf-prod__info">
+          <h3 class="prod__type mb-3 text-xs uppercase">
+            {% unless section_onboarding %}
+              {{ product.type }}
+            {% endunless %}
+          </h3>
+          <a class="prod__title text-2xl md:text-3xl leading-10 font-medium mt-5 mb-2" href="{{ product.url }}">
+            {% unless section_onboarding %}
+              {{ product.title }}
+            {% else %}
+              {{ 'homepage.onboarding.product_title' | t }}
+            {% endunless %}
+          </a>
+          <div class="prod_prices mt-2 mb-8 flex items-center">
+            {% unless section_onboarding %}
+              {% render 'product-prices', price_text_size: 'text-xl md:text-2xl', product: product, use_variant: true %}
+            {% else %}
+              <span class="text-xl prod__price sf-currency">
+                {{ 1999 | money }}
+              </span>
+            {% endunless %}
+          </div>
+          <div class="prod__reviews_count mt-8 mb-4">
+            {% render 'product-reviews-app__badge' %}
+          </div>
+          {% unless section_onboarding %}
+            <div class="prod__description leading-7 text-base mt-4 mb-8">
+              {{ product.description | strip_html | truncatewords: 100 }}
+            </div>
+          {% else %}
+            <div class="prod__description leading-7 text-base mt-4 mb-8">
+              {{ 'homepage.onboarding.product_description' | t }}
+            </div>
+          {% endunless %}
+          {% unless section_onboarding %}
+            {%
+              render 'product-form',
+              section_id: section.id,
+              product: product,
+              section: section,
+							product_form_id: product_form_id,
+              product_form_class: product_form_class,
+              current_variant: current_variant,
+							is_preorder: is_preorder,
+              enable_dynamic_checkout: section.settings.enable_payment_button,
+              show_quantity_selector: section.settings.show_quantity_selector
+            %}
+          {% else %}
+            <div class="flex flex-wrap mb-5">
+              <button type="submit" class="add-to-cart sf__btn sf__btn-primary flex-grow shrink relative">
+                <span>{{ 'products.product.add_to_cart' | t }}</span>
+              </button>
+            </div>
+          {% endunless %}
+          {% if section.settings.show_share_buttons %}
+            <div class="prod__social_share mt-6 flex text-color-prod-desc">
+              {%- liquid
+                assign socials = "facebook,twitter,pinterest" | split: ','
+              -%}
+              {% for network in socials %}
+                {% liquid
+                  assign url = shop.url | append: product.url
+                  case network
+                      when "facebook"
+                          assign url = 'https://www.facebook.com/sharer/sharer.php?u=' | append: url
+                      when "pinterest"
+                          assign url = 'https://pinterest.com/pin/create/button/?url=' | append: url
+                      when "twitter"
+                          assign url = 'https://twitter.com/intent/tweet?url=' | append: url
+                  endcase
+                %}
+                <a href="{{ url }}" target="_blank" class="mr-8 flex items-center">
+                  {% render 'icon', name: network, size: 'small' %}
+                  <span class="ml-2">{{ network | capitalize }}</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if product.media.size > 0 %}
+  <script src="{{ 'product-media.min.js' | asset_url }}" defer="defer"></script>
+{% endif %}
+{%- if first_3d_model -%}
+  <script type="application/json" id="ModelJSON-{{ product.id }}">
+    {{ product.media | where: 'media_type', 'model' | json }}
+  </script>
+  <script src="{{ 'product-model-new.min.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+{% if product.options_with_values.size > 0 %}
+  <script src="{{ 'variant-picker.min.js' | asset_url }}" defer="defer"></script>
+{% endif %}
+
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org/",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    "url": {{ shop.url | append: product.url | json }},
+    {%- if product.featured_media -%}
+      {%- assign media_size = product.featured_media.preview_image.width -%}
+      "image": [
+        {{ product.featured_media | image_url: width: media_size | prepend: "https:" | json }}
+      ],
+    {%- endif -%}
+    "description": {{ product.description | strip_html | json }},
+    {%- if current_variant.sku != blank -%}
+      "sku": {{ current_variant.sku | json }},
+    {%- endif -%}
+    "brand": {
+      "@type": "Thing",
+      "name": {{ product.vendor | json }}
+    },
+    "offers": [
+      {%- for variant in product.variants -%}
+        {
+          "@type" : "Offer",
+          {%- if variant.sku != blank -%}
+            "sku": {{ variant.sku | json }},
+          {%- endif -%}
+          "availability" : "http://schema.org/{% if variant.available %}InStock{% else %}OutOfStock{% endif %}",
+          "price" : {{ variant.price | divided_by: 100.00 | json }},
+          "priceCurrency" : {{ cart.currency.iso_code | json }},
+          "url" : {{ shop.url | append: variant.url | json }}
+        }{% unless forloop.last %},{% endunless %}
+      {%- endfor -%}
+    ]
+  }
+</script>
+
+{% schema %}
+{
+  "name": {
+    "en": "[Legacy] Featured product"
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "This section is deprecated, we have created a new section with a new structure to easily customize with blocks. Please use new section, we will remove this section in the upcoming version."
+    },
+    {
+      "type": "header",
+      "content": "General"
+    },
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "product",
+      "id": "featured_product",
+      "label": "Product"
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Item gap",
+      "min": 0,
+      "max": 200,
+      "step": 5,
+      "default": 100,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "column_gap_mobile",
+      "label": "item gap mobile",
+      "min": 0,
+      "max": 50,
+      "step": 5,
+      "default": 30,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Media"
+    },
+    {
+      "type": "select",
+      "id": "image_placement",
+      "label": "Media placement",
+      "options": [
+        {
+          "label": "Left",
+          "value": "left"
+        },
+        {
+          "label": "Right",
+          "value": "right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_thumbnails",
+      "label": "Show gallery",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Others"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quantity_selector",
+      "label": "Show quantity selector",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_payment_button",
+      "label": "Show dynamic checkout button",
+      "info": "Each customer will see their preferred payment method from those available on your store, such as PayPal or Apple Pay. [Learn more](https://help.shopify.com/manual/using-themes/change-the-layout/dynamic-checkout)",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_share_buttons",
+      "label": "Show social sharing buttons",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom classes"
+    }
+  ],
+  "presets": [
+    {
+      "name": {
+        "en": "[Legacy] Featured product"
+      }
+    }
+  ]
+}
+{% endschema %}

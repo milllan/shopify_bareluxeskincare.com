@@ -1,0 +1,5 @@
+{%- if section.settings.show_zoom_button != false -%}
+  <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+    {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+  </div>
+{%- endif -%}

@@ -1,0 +1,106 @@
+{%- liquid
+  assign st = section.settings
+  assign class = ''
+
+  unless st.use_sticky_atc
+    assign class = ' hide-on-desk'
+  endunless
+
+  unless st.use_sticky_atc_on_mobile
+    assign class = ' hide-on-mobile'
+  endunless
+
+	assign image_field = section.blocks | where: "type", "image_field"
+
+  assign enable_dynamic_checkout = st.enable_dynamic_checkout
+  assign is_preorder = product.metafields.foxkit.preorder.active
+
+	assign image = product.featured_image
+	if first_3d_model and product.media.size < 2
+		for media in product.media
+			assign image = media
+		endfor
+	endif
+-%}
+<script src="{{ 'sticky-atc.min.js' | asset_url }}" defer="defer"></script>
+<div
+  class="prod__sticky-atc {{ class }} sf-prod__block fixed z-40 bottom-0 inset-x-0 transition-transform translate-y-full{% if enable_dynamic_checkout %} enable-dynamic-checkout{% endif %}"
+  data-show-on-desktop="{{ st.use_sticky_atc }}"
+  data-show-on-mobile="{{ st.use_sticky_atc_on_mobile }}"
+  style="box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.09);"
+  data-view="sticky-atc"
+>
+  <div class="{{ st.container }}{% if st.container == 'w-full' %} px-4{% endif %}">
+		<sticky-atc class="form product-form lg:container flex items-center justify-between" data-product-id="{{ product.id }}">
+			<div class="{% if product.has_only_default_variant %}flex {% else %} hidden{% endif %} md:flex pr-2">
+				<div class="spc__main-img cursor-pointer py-1.5 hidden md:flex">
+					{% render 'responsive-image', image: image, sizes: "100x", aspect_ratio: 1, image_class: 'h-full object-contain' %}
+				</div>
+				<div class="md:ml-6 psa__info">
+					<h3 class="psa__title text-base hover:text-color-primary-darker font-medium cursor-pointer line-clamp-1">
+						{{ product.title }}
+					</h3>
+					{% comment %} 
+          <div>
+						{% render 'product-prices', use_variant: true, product: product %}
+					</div> 
+          {% endcomment %}
+				</div>
+			</div>
+			<div class="flex shrink-0 items-center psa__form-controls {% unless product.has_only_default_variant %} w-full md:w-auto{% endunless %}">
+				{%- assign product_form_id = 'sticky-atc-form-' | append: section.id -%}
+				{%- assign product_form_class = 'sticky-atc-form flex product-form-' | append: section.id -%}
+				<product-form class="f-product-form w-full {{ image_field.size }}">
+					{%- form 'product', product, id: product_form_id, class: product_form_class, novalidate: 'novalidate', data-type: 'add-to-cart-form', data-preorder: is_preorder -%}
+							<select
+								name="id"
+								class="sf-product-variant-option-dropdown combined-variant border border-color-border flex-0 rounded mr-5 pl-4 {% if product.has_only_default_variant %} hidden{% endif %}"
+							>
+								{% for variant in product.variants %}
+									{% assign selected = false %}
+									{%- if variant.id == product.selected_or_first_available_variant.id -%}
+										{% assign selected = true %}
+									{%- endif -%}
+									<option
+										value="{{ variant.id }}"
+										{% if selected %}
+											selected="true"
+										{% endif %}
+									>
+										{{ variant.title }} - {{ variant.price | money }}
+									</option>
+								{% endfor %}
+							</select>
+						{%- capture qty_input_class -%}
+							mr-2.5 lg:mr-5 md:flex {% unless product.has_only_default_variant %}hidden{% endunless %}
+						{%- endcapture -%}
+						{% render 'product-qty-input', class: qty_input_class, product_form_id: product_form_id %}
+		
+						{%- liquid 
+							assign btn_class = 'sf__btn-primary flex-1'
+							if enable_dynamic_checkout
+								assign btn_class = 'sf__btn-secondary'
+							endif
+						-%}
+						{% render 'product-atc', class: btn_class, product: product %}
+						{% if enable_dynamic_checkout and is_preorder != true and image_field.size <= 0 %}
+							<div class="prod__dynamic_checkout buy-one-click flex-1 md:ml-5">
+								{{ form | payment_button }}
+							</div>
+						{% endif %}
+					{%- endform -%}
+				</product-form>
+				{% if st.sticky_atc_wishtlist or st.sticky_atc_compare %}
+					<div class="hidden lg:flex items-center ml-5">
+						{% if st.sticky_atc_compare %}
+							{% render 'tooltip', type: 'compare', class_name: 'sf__tooltip-top' %}
+						{% endif %}
+						{% if st.sticky_atc_wishtlist %}
+							{% render 'tooltip', type: 'wishlist', class_name: 'sf__tooltip-top' %}
+						{% endif %}
+					</div>
+				{% endif %}
+			</div>
+    </sticky-atc>
+  </div>
+</div>

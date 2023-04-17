@@ -1,0 +1,14 @@
+<link rel="canonical" href="{{ canonical_url }}">
+{{ 'theme.css' | asset_url | stylesheet_tag: preload: true }}
+{{ 'chunk.css' | asset_url | stylesheet_tag: preload: true }}
+
+{% comment %} Minimog prefetch resources {% endcomment %}
+<link rel="dns-prefetch" href="{{ canonical_url }}" crossorigin>
+<link rel="dns-prefetch" href="https://cdn.shopify.com" crossorigin>
+<link rel="preconnect" href="{{ canonical_url }}" crossorigin>
+<link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
+
+{{ 'vendor.min.js' | asset_url | preload_tag: as: 'script' }}
+{{ 'app.min.js' | asset_url | preload_tag: as: 'script' }}
+{{ 'foxkit-app.min.js' | asset_url | preload_tag: as: 'script' }}
+{% comment %} End Minimog prefetch resources {% endcomment %}

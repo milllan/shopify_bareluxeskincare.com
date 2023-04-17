@@ -1,0 +1,165 @@
+{%- liquid 
+  assign product_handle = product.handle
+  case settings.pcard_alignment
+    when 'left'
+      assign alignment = 'start'
+    when 'right'
+      assign alignment = 'end'
+    else
+      assign alignment = 'center'
+  endcase  
+-%}
+<div
+  data-limit="{{ values_limit }}"
+  data-pcard-variant-picker
+  data-product-url="/products/{{ product.handle }}"
+  {% unless show_variant_options %}style="display: none;"{% endunless %}
+>
+  <pcard-swatch class="pcard-variant-option{% if settings.pcard_option_design == 'button' or settings.pcard_option_design == 'color' %} -mx-[5px]{% endif %} mt-3 flex flex-wrap items-center justify-{{ alignment }}">
+    {%- for option in product.options_with_values -%}
+      {%- liquid
+        assign option_name = option.name | downcase
+        assign pcard_option_name_setting_downcase = settings.pcard_option_name | downcase
+
+        assign values_limit = settings.pcard_limit_values_number
+        assign rest_values = 0
+
+        if values_limit == 0
+          assign values_limit = 99
+        elsif option.values.size > values_limit
+          assign rest_values = option.values.size | minus: values_limit
+        endif
+      -%}
+      {% if option_name == pcard_option_name_setting_downcase %}
+        {%- case settings.pcard_option_design -%}
+          {%- when 'dropdown' -%}
+            <swatch-dropdown class="inline-flex flex-wrap">
+              <label for="{{ option.name }} {{ option.position }}"></label>
+              <div class="sf__select-bordered">
+                <select class="sf-product-variant-option-dropdown h-11 border border-color-border rounded w-full pl-4 pr-10 cursor-pointer">
+                  {% for value in option.values %}
+                    <option
+                      {% if option.selected_value == value %}
+                        selected
+                      {% endif %}
+                      class="product-option-item"
+                      data-option-position="{{ option.position }}"
+                      data-option-type="dropdown"
+                      data-value="{{- value | escape -}}"
+                    >
+                      {{- value -}}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </swatch-dropdown>
+          {% when 'image' %}
+            <swatch-image class="inline-flex flex-wrap">
+              {% for value in option.values %}
+                {%- if forloop.index0 < values_limit -%}
+                  <div
+                    {% if option.selected_value == value %}
+                      data-selected="true"
+                    {% endif %}
+                    class="product-option-item border border-color-border flex items-center justify-center mr-2 mb-2 cursor-pointer"
+                    data-option-position="{{ option.position }}"
+                    data-option-type="image"
+                    data-value="{{- value | escape -}}"
+                    style="--option-aspect-ratio: {{ product.featured_image.aspect_ratio | default: '1' }}"
+                  >
+                    {{- value -}}
+                  </div>
+                {%- endif -%}
+              {% endfor %}
+              {%
+                render 'product-option-rest-values',
+                class: 'sf-po__option-button',
+                product_handle: product_handle,
+                rest_values: rest_values
+              %}
+            </swatch-image>
+          {% when 'color' %}
+            <swatch-color class="inline-flex flex-wrap">
+              {% for value in option.values %}
+                {%- if forloop.index0 < values_limit -%}
+                  <div class="sf__tooltip-item sf__tooltip-top">
+                    <div class="sf__variant-swatch flex justify-center items-center">
+                      <div
+                        {% if option.selected_value == value %}
+                          data-selected="true"
+                        {% endif %}
+                        class="product-option-item flex items-center justify-center cursor-pointer text-white"
+                        data-option-position="{{ option.position }}"
+                        data-option-type="color"
+                        data-value="{{- value | escape -}}"
+                      >
+                        {{- value -}}
+                      </div>
+                    </div>
+                    <span class="sf__tooltip-content capitalize">{{- value -}}</span>
+                  </div>
+                {%- endif -%}
+              {% endfor %}
+              {%
+                render 'product-option-rest-values',
+                class: 'color-design',
+                product_handle: product_handle,
+                rest_values: rest_values
+              %}
+            </swatch-color>
+          {% when 'button' %}
+            <swatch-button class="inline-flex flex-wrap{% if is_size %} mr-4{% endif %}">
+              {% for value in option.values %}
+                {%- if forloop.index0 < values_limit -%}
+                  <div
+                    {% if option.selected_value == value %}
+                      data-selected="true"
+                    {% endif %}
+                    class="product-option-item sf-po__option-button"
+                    data-option-position="{{ option.position }}"
+                    data-option-type="button"
+                    data-value="{{- value | escape -}}"
+                  >
+                    {{- value -}}
+                  </div>
+                {%- endif -%}
+              {% endfor %}
+              {%
+                render 'product-option-rest-values',
+                class: 'sf-po__option-button',
+                product_handle: product_handle,
+                rest_values: rest_values
+              %}
+            </swatch-button>
+          {%- else -%}
+            <swatch-color class="inline-flex flex-wrap{% if is_size %} mr-4{% endif %}" style="margin: 0 -5px;">
+              {% for value in option.values %}
+                {%- if forloop.index0 < values_limit -%}
+                  <div
+                    {% if option.selected_value == value %}
+                      data-selected="true"
+                    {% endif %}
+                    class="product-option-item sf-po__option-button rounded"
+                    data-option-position="{{ option.position }}"
+                    data-option-type="color"
+                    data-value="{{- value | escape -}}"
+                  >
+                    {{- value -}}
+                  </div>
+                {%- endif -%}
+              {% endfor %}
+              {%
+                render 'product-option-rest-values',
+                class: 'sf-po__option-button default-design',
+                product_handle: product_handle,
+                rest_values: rest_values
+              %}
+            </swatch-color>
+        {%- endcase -%}
+      {% endif %}
+    {%- endfor -%}
+  </pcard-swatch>
+  <script type="application/json">
+    {{ product.variants | json }}
+  </script>
+</div>

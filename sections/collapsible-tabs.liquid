@@ -1,0 +1,126 @@
+{%- assign st = section.settings -%}
+{% if section.blocks.size > 0 %}
+    <section
+        class="sf-collapsible{% if template == 'product' %} sf-product__section{% endif %}"
+        data-section-type="sf-collapsible" data-section-id="{{ section.id }}"
+    >
+      <div class="{{ st.container }}">
+        <div class="prod__accordion">
+          {% for block in section.blocks %}
+            <collapsible-tab
+              class="collapsible__item no-js-hidden"
+              data-block-id="collapsible-tab-{{ block.id }}"
+              {% if block.settings.open %}open="true"{% endif %}
+            >
+              <h3 class="collapsible__button lg:text-[18px] py-4 pr-4 border-b border-color-border" data-trigger>
+                  {% if block.settings.icon != blank and block.settings.icon != 'none' %}
+                      {% render 'icon', name: block.settings.icon %}
+                  {% endif %}
+                  <span>{{ block.settings.header }}</span>
+              </h3>
+              <div class="collapsible__content" data-content hidden>
+                  <div class="collapsible__content-inner pt-5 pb-10 prose">
+                    {% case block.type %}
+                      {% when 'item' %}
+                        {{ block.settings.content }}
+                        {{ block.settings.content_page.content }}
+                      {% when 'liquid' %}
+                        {{ block.settings.custom_liquid }}
+                      {% else %}
+                    {% endcase %}
+                  </div>
+              </div>
+            </collapsible-tab>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+{% endif %}
+
+{% schema %}
+{
+  "name": "Collapsible tabs",
+  "settings": [
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container",
+          "label": "Fixed width"
+        },
+        {
+          "value": "container-fluid",
+          "label": "Stretched width"
+        },
+        {
+          "value": "container-narrow",
+          "label": "Narrow width"
+        }
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "type": "item",
+      "name": "Custom content",
+      "settings": [
+        {
+          "type": "text",
+          "id": "header",
+          "label": "Collapsible tab",
+          "default": "Collapsible tab heading"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Accordion content",
+          "default": "<p>Shipping cost is based on weight. Just add products to your cart and use the Shipping Calculator to see the shipping price.</p><p>We want you to be 100% satisfied with your purchase. Items can be returned or exchanged within 30 days of delivery.</p>"
+        },
+        {
+          "type": "page",
+          "id": "content_page",
+          "label": "Tab content from page"
+        },
+        {
+          "type": "checkbox",
+          "id": "open",
+          "label": "Default open"
+        }
+      ]
+    },
+    {
+      "type": "liquid",
+      "name": "Custom liquid",
+      "settings": [
+        {
+          "type": "text",
+          "id": "header",
+          "label": "Tab heading",
+          "default": "Tab heading"
+        },
+        {
+          "type": "liquid",
+          "id": "custom_liquid",
+          "label": "Custom liquid"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collapsible tabs",
+      "blocks": [
+        {
+          "type": "item"
+        },
+        {
+          "type": "item"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

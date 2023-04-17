@@ -1,0 +1,208 @@
+{%- assign st = section.settings -%}
+{%- assign total_active_values = 0 -%}
+
+<script src="{{ '2.0-filters.min.js' | asset_url }}" defer="defer"></script>
+<collection-filters-form>
+  <form id="CollectionFiltersForm">
+    {%- if results.terms -%}
+      <input type="hidden" name="q" value="{{ results.terms | escape }}">
+      <input name="options[prefix]" type="hidden" value="last">
+    {%- endif -%}
+    {%- if st.show_sorting -%}
+      <div class="hidden" data-form-sorting>
+        {%- assign sort_by = results.sort_by | default: results.default_sort_by -%}
+        <select name="sort_by" aria-describedby="a11y-refresh-page-message">
+          {%- for option in results.sort_options -%}
+            <option 
+              value="{{ option.value | escape }}"
+              {% if option.value == sort_by %} selected="selected"{% endif %}
+              data-index="{{ forloop.index0 }}"
+            >
+              {{ option.name | escape }}
+            </option>
+          {%- endfor -%}
+        </select>
+      </div>
+    {%- endif -%}
+    <div class="pb-4">
+      {%- for filter in results.filters -%}
+        {% liquid
+          assign total_active_values = total_active_values | plus: filter.active_values.size
+          assign acc_open_class = 'open'
+          assign acc_content_style = 'style="opacity: 1;"'
+
+          if st.collapsed_groups contains filter.label
+            assign acc_open_class = ''
+            assign acc_content_style = ''
+          endif
+
+          assign filter_label = filter.label | downcase
+          assign color_swatches = section.settings.color_swatches | downcase | split: ','
+          assign has_color = color_swatches | where: filter_label | first
+          assign is_color = false
+
+          if color_swatches != blank and has_color != blank
+            assign is_color = true
+          endif
+        %}
+
+        {% case filter.type %}
+          {% when 'list' %}
+            <div class="sf__accordion-item {{ acc_open_class }}" data-index="{{ forloop.index }}">
+              <div class="mb-1.5 sf__accordion-button text-lg">
+                <span>{{ filter.label | escape }}</span>
+              </div>
+              <div class="sf__accordion-content" {{ acc_content_style }}>
+                <ul class="{% if st.limit_height_widget %}sf-scroll_content{% endif %}{% if is_color %} sf__options-swatch{% endif %}" role="list" style="--max-height: {{ section.settings.limit_height }}px;">
+                  {%- for value in filter.values -%}
+                    {% unless is_color %}
+                      <li>
+                        <label for="Filter-{{ filter.label | escape }}-{{ forloop.index }}" class="facet-checkbox{% if value.count == 0 and value.active == false %} facet-checkbox--disabled{% endif %}">
+                          <input
+                            type="checkbox"
+                            name="{{ value.param_name }}"
+                            value="{{ value.value }}"
+                            id="Filter-{{ filter.label | escape }}-{{ forloop.index }}"
+                            {% if value.active %}checked{% endif %}
+                            {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                              <rect width="16" height="16" stroke="currentColor" fill="none" stroke-width="1"></rect>
+                            </svg>
+                            <svg class="icon icon-checkmark" width="11" height="7" viewBox="0 0 11 7" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M1.5 3.5L2.83333 4.75L4.16667 6L9.5 1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          <span class='filter-label'>{{ value.label | escape }}</span>
+                          {%- if st.show_product_count -%}
+                            <span class='ml-1 filter-products-count'>({{ value.count }})</span>
+                          {%- endif -%}
+                        </label>
+                      </li>
+                    {% else %}
+                      {% liquid
+                        assign tag = value.value
+                        assign tag_downcase = tag | handleize | downcase
+                        
+                        capture texture
+                          render 'get_swatch_texture', texture_name: tag
+                        endcapture
+
+                        capture texture_style
+                          if texture != ''
+                            echo texture | asset_url
+                          endif
+                        endcapture
+                        
+                        assign colors = ',' | append: settings.product_colors | strip_newlines | downcase | append: ','
+                        assign _tag = tag | downcase | strip
+                        assign _tag = ',' | append: _tag | append: ':'
+                        capture curcol
+                          if colors contains _tag
+                            echo colors | split: _tag | last | split: ',' | first | strip
+                          endif
+                        endcapture
+                        assign default_color = tag_downcase | split: '-' | first
+                      %}
+
+                      <li class="sf__option-filter sf__tooltip-item sf__tooltip-top py-2 tag-filter--color {% if value.active %}active remove-tag{% endif %}">
+                        <label for="Filter-{{ filter.label | escape }}-{{ forloop.index }}" class="{% if value.count == 0 and value.active == false %}facet-checkbox--disabled{% endif %}">
+                          <input
+                            type="checkbox"
+                            name="{{ value.param_name }}"
+                            value="{{ value.value }}"
+                            class="visually-hidden"
+                            id="Filter-{{ filter.label | escape }}-{{ forloop.index }}"
+                            {% if value.active %}checked{% endif %}
+                            {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                          >
+                          <span class="tag-filter__color" style="background-color: {{ curcol | default: default_color }}; background-image: url({{- texture_style -}}); background-size: cover;">
+                            <span class="visually-hidden">{{ value.label }}</span>
+                          </span>
+                          <span class="sf__tooltip-content">{{ value.label }}</span>
+                        </label>
+                      </li>
+                    {% endunless %}
+                  {%- endfor -%}
+                </ul>
+              </div>
+            </div>
+          {% when 'price_range' %}
+            {%- liquid
+              assign currencies_using_comma_decimals = 'ANG,ARS,BRL,BYN,BYR,CLF,CLP,COP,CRC,CZK,DKK,EUR,HRK,HUF,IDR,ISK,MZN,NOK,PLN,RON,RUB,SEK,TRY,UYU,VES,VND' | split: ','
+              assign uses_comma_decimals = false
+              if currencies_using_comma_decimals contains cart.currency.iso_code
+                assign uses_comma_decimals = true
+              endif
+
+              if uses_comma_decimals
+                assign from_value = filter.min_value.value | money_without_currency | replace: '.', '' | replace: ',', '.'
+                assign to_value = filter.max_value.value | money_without_currency | replace: '.', '' | replace: ',', '.'
+                assign max = filter.range_max | money_without_currency | replace: '.', '' | replace: ',', '.'
+              else
+                assign from_value = filter.min_value.value | money_without_currency | replace: ',', ''
+                assign to_value = filter.max_value.value | money_without_currency | replace: ',', ''
+                assign max = filter.range_max | money_without_currency | replace: ',', ''
+              endif
+
+              assign to_value = to_value | default: max
+              assign _from = from_value | divided_by: max | times: 100 | round: 2
+              assign _to = to_value | divided_by: max | times: 100 | round: 2
+              if filter.min_value.value != blank or filter.max_value.value != blank
+                assign total_active_values = total_active_values | plus: 1
+              endif
+            -%}
+            <div class="sf__accordion-item {{ acc_open_class }}" data-index="{{ forloop.index }}">
+              <div class="mb-1.5 sf__accordion-button">{{ filter.label | escape }}</div>
+              <div class="sf__accordion-content" {{ acc_content_style }}>
+                <price-range
+                  class="sf-facets-price"
+                  data-price-max="{{ max }}"
+                  data-price-gap="{{ max | times: 0.06 | floor }}"
+                  style="--from: {{ _from | default: 0 }}%; --to: {{ _to | default: 100 }}%; --color: #222;"
+                >
+                  <div class="sf-facets-price__range-group">
+                    <input
+                      type="range" data-type="min-range"
+                      aria-label="{{ 'sections.collection_template.from' | t }}"
+                      class="sf-facets-price__range sf-facets-price__range--min"
+                      min="0" max="{{ max }}" value="{{ from_value | default: 0 }}"
+                    />
+                    <input
+                      type="range" data-type="max-range"
+                      aria-label="{{ 'sections.collection_template.to' | t }}"
+                      class="sf-facets-price__range sf-facets-price__range--max"
+                      min="0" max="{{ max }}" value="{{ to_value }}"
+                    />
+                  </div>
+                  <div class="sf-facets-price__inputs">
+                    <div class="sf-facets-price__field">
+                      <span class="visually-hidden">{{ 'sections.collection_template.from' | t }}</span>
+                      <span class="sf-facets-price__field-currency">{{ cart.currency.symbol }}</span>
+                      <input
+                        class="form-control" data-type="min-input"
+                        name="{{ filter.min_value.param_name }}" type="number" placeholder="0"
+                        {%- if filter.min_value.value -%}value="{{ from_value }}"{%- endif -%}
+                      />
+                    </div>
+                    <span class="sf-facets-price__to">{{ 'sections.collection_template.to' | t }}</span>
+                    <div class="sf-facets-price__field">
+                      <span class="visually-hidden">{{ 'sections.collection_template.to' | t }}</span>
+                      <span class="sf-facets-price__field-currency">{{ cart.currency.symbol }}</span>
+                      <input
+                        class="form-control" data-type="max-input"
+                        name="{{ filter.max_value.param_name }}" type="number" placeholder="{{ max }}"
+                        {%- if filter.max_value.value -%}value="{{ to_value }}"{%- endif -%}
+                      />
+                    </div>
+                  </div>
+                </price-range>
+              </div>
+            </div>
+        {% endcase %}
+      {%- endfor -%}
+    </div>
+    {%- if results.current_vendor or results.current_type -%}
+      <input type="hidden" name="q" value="{{ results.current_vendor }}{{ results.current_type }}">
+    {%- endif -%}
+  </form>
+</collection-filters-form>

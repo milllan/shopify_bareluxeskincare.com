@@ -1,0 +1,558 @@
+{{ 'component-product-card.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  if card_style == nil or card_style == blank
+    assign card_style = settings.pcard_layout
+  endif
+
+  if show_variant_options == nil 
+    assign show_variant_options = settings.show_swatch_option
+  endif
+
+  assign show_title = true
+  if hide_title == true
+    assign show_title = false
+  endif
+
+  if image_ratio == nil or image_ratio == blank
+    assign image_ratio = settings.pcard_image_ratio | default: '1/1'
+  endif
+
+  if image_ratio == 'original'
+    assign image_ratio = product.featured_image.aspect_ratio | default: '1/1'
+  endif
+
+  if show_vendor == nil
+    assign show_vendor = settings.show_vendor
+  endif
+
+  assign sold_out = true
+  assign variant = product.selected_or_first_available_variant
+
+  if variant.available
+    assign sold_out = false
+  endif
+
+  for variant in product.variants
+    if variant.inventory_management == 'shopify' and variant.inventory_policy == 'continue' and variant.inventory_quantity == 0
+      assign sold_out = false
+      break
+    endif
+  endfor
+
+  assign discount = ''
+  assign compare_at_price = variant.compare_at_price
+  assign price = variant.price
+  assign on_sale = false
+  if compare_at_price > price
+    assign on_sale = true
+    assign discount = compare_at_price | minus: price | times: 100 | divided_by: compare_at_price
+  endif
+          
+  assign show_on_sale_badge = false
+  if settings.on_sale_badge != 'hide' and on_sale
+    assign show_on_sale_badge = true
+  endif
+
+  assign quick_add_text = 'products.product.quick_add' | t
+  unless product.has_only_default_variant
+    capture quick_add_text
+      render 'new-locale', key: 'products.product.select_options'
+    endcapture
+  endunless
+
+  assign sold_number = product.metafields.foxkit.sold_number
+
+  if product.available 
+    assign variant_id = product.first_available_variant.id
+  else 
+    assign variant_id = product.selected_or_first_available_variant.id
+  endif
+  assign selected_variant_id = ''
+  if section.settings.change_product_variant_on_fitlering
+    assign variant_id = product.selected_or_first_available_variant.id
+    assign selected_variant_id = product.selected_variant.id
+  endif
+
+  capture is_preorder
+    render 'check-preorder', product: product
+  endcapture
+
+  if pcard_alignment == nil
+    assign pcard_alignment = settings.pcard_alignment
+  endif
+%}
+
+{%- if column_wrapper -%}<div class="sf-column">{%- endif -%}
+  <div class="sf__pcard{% if sold_out %} sf__pcard--soldout{% endif %}{% if on_sale %} sf__pcard--onsale{% endif %} cursor-pointer sf-prod__block sf__pcard-style-{{ card_style }}" data-view="card"{% if sold_number != blank %} data-sold-number="{{ sold_number }}"{% endif %} data-product-id="{{ product.id }}">  
+      <div class="sf__pcard-image {% unless settings.show_second_img %} spc__img-only{% endunless %}">
+        <div class="overflow-hidden cursor-pointer relative sf__image-box">
+          {% liquid
+            assign pcard_default_image = settings.pcard_default_image
+            if image_ratio == nil or image_ratio == blank
+              assign image_ratio = settings.pcard_image_ratio | default: '1/1'
+            endif
+          
+            assign preview_image = product.media[0].preview_image
+            if section.settings.change_product_variant_on_fitlering == true and product.selected_variant.image != nil
+              assign preview_image = product.selected_variant.image
+            endif
+          
+            if image_ratio == 'original'
+              assign image_ratio = product.media[0].aspect_ratio | default: '1/1'
+            endif
+          
+            assign second_image = ''
+            if settings.show_second_img and product.images.size > 1 and product.images[1] != blank
+              assign second_image = product.images[1]
+            endif
+          
+            assign image_attributes = 'alt="' | append: product.title | append: '"'
+          %}
+          <div class="flex justify-center items-center">
+            <a href="{{ product.url }}" class="block w-full">
+                {% if preview_image != blank %}
+                  <div class="spc__main-img{% if product.images.size < 2 %} spc__img-only{% endif %}">
+                    {%- capture style -%}
+                      {% assign asp_rat = image_ratio | default: preview_image.aspect_ratio %}
+                      {% if asp_rat == 'original' %}
+                        --aspect-ratio: {{ preview_image.aspect_ratio }};
+                      {% else %}
+                        --aspect-ratio: {{ asp_rat }};
+                      {% endif %}
+                    {%- endcapture -%}
+                    <responsive-image class="sf-image" data-image-loading style="{{ style | strip | strip_newlines }}">
+                      <img
+                          srcset="{%- if preview_image.width >= 165 -%}{{ preview_image | image_url: width: 165 }} 165w,{%- endif -%}
+                              {%- if preview_image.width >= 360 -%}{{ preview_image | image_url: width: 360 }} 360w,{%- endif -%}
+                              {%- if preview_image.width >= 533 -%}{{ preview_image | image_url: width: 533 }} 533w,{%- endif -%}
+                              {%- if preview_image.width >= 720 -%}{{ preview_image | image_url: width: 720 }} 720w,{%- endif -%}
+                              {%- if preview_image.width >= 940 -%}{{ preview_image | image_url: width: 940 }} 940w,{%- endif -%}
+                              {%- if preview_image.width >= 1066 -%}{{ preview_image | image_url: width: 1066 }} 1066w,{%- endif -%}
+                              {%- if preview_image.width >= 1500 -%}{{ preview_image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                              {%- if preview_image.width >= 1780 -%}{{ preview_image | image_url: width: 1780 }} 1780w,{%- endif -%}
+                              {%- if preview_image.width >= 2000 -%}{{ preview_image | image_url: width: 2000 }} 2000w,{%- endif -%}
+                              {{ preview_image | image_url }} {{ preview_image.width }}w"
+                          src="{{ preview_image | image_url: width: 533 }}"
+                          sizes="(min-width: {{ settings.container_width }}px) {{ settings.container_width | minus: 130 | divided_by: 4 }}px, (min-width: 990px) calc((100vw - 130px) / 4), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)"
+                          alt="{{ alt | default: preview_image.alt | escape }}"
+                          loading="lazy"
+                          class="se-out w-full h-full"
+                          width="{{ preview_image.width }}"
+                          height="{{ preview_image.height }}"
+                          {{ image_attributes }}
+                      >
+                    </responsive-image>
+                  </div>
+          
+                  {%- if second_image != blank -%}
+                    <div class="spc__hover-img">
+                      {%- capture style -%}
+                        {% assign asp_rat = image_ratio | default: second_image.aspect_ratio %}
+                        {% if asp_rat == 'original' %}
+                          --aspect-ratio: {{ second_image.aspect_ratio }};
+                        {% else %}
+                          --aspect-ratio: {{ asp_rat }};
+                        {% endif %}
+                      {%- endcapture -%}
+                      <responsive-image class="sf-image" data-image-loading style="{{ style | strip | strip_newlines }}">
+                        <img
+                            srcset="{%- if second_image.width >= 165 -%}{{ second_image | image_url: width: 165 }} 165w,{%- endif -%}
+                                {%- if second_image.width >= 360 -%}{{ second_image | image_url: width: 360 }} 360w,{%- endif -%}
+                                {%- if second_image.width >= 533 -%}{{ second_image | image_url: width: 533 }} 533w,{%- endif -%}
+                                {%- if second_image.width >= 720 -%}{{ second_image | image_url: width: 720 }} 720w,{%- endif -%}
+                                {%- if second_image.width >= 940 -%}{{ second_image | image_url: width: 940 }} 940w,{%- endif -%}
+                                {%- if second_image.width >= 1066 -%}{{ second_image | image_url: width: 1066 }} 1066w,{%- endif -%}
+                                {%- if second_image.width >= 1500 -%}{{ second_image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                                {%- if second_image.width >= 1780 -%}{{ second_image | image_url: width: 1780 }} 1780w,{%- endif -%}
+                                {%- if second_image.width >= 2000 -%}{{ second_image | image_url: width: 2000 }} 2000w,{%- endif -%}
+                                {{ second_image | image_url }} {{ second_image.width }}w"
+                            src="{{ second_image | image_url: width: 353 }}"
+                            sizes="(min-width: {{ settings.container_width }}px) {{ settings.container_width | minus: 130 | divided_by: 4 }}px, (min-width: 990px) calc((100vw - 130px) / 4), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)"
+                            alt="{{ alt | default: second_image.alt | escape }}"
+                            loading="lazy"
+                            class="se-out w-full h-full"
+                            width="{{ second_image.width }}"
+                            height="{{ second_image.height }}"
+                            {{ image_attributes }}
+                        >
+                      </responsive-image>
+                    </div>
+                  {%- endif -%}
+                {% else %}
+                  {% if pcard_default_image != blank %}
+                      {%- capture style -%}
+                        {% assign asp_rat = image_ratio | default: pcard_default_image.aspect_ratio %}
+                        {% if asp_rat == 'original' %}
+                          --aspect-ratio: {{ pcard_default_image.aspect_ratio }};
+                        {% else %}
+                          --aspect-ratio: {{ asp_rat }};
+                        {% endif %}
+                      {%- endcapture -%}
+                      <responsive-image class="sf-image" data-image-loading style="{{ style | strip | strip_newlines }}">
+                        <img
+                            srcset="{%- if pcard_default_image.width >= 165 -%}{{ pcard_default_image | image_url: width: 165 }} 165w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 360 -%}{{ pcard_default_image | image_url: width: 360 }} 360w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 533 -%}{{ pcard_default_image | image_url: width: 533 }} 533w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 720 -%}{{ pcard_default_image | image_url: width: 720 }} 720w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 940 -%}{{ pcard_default_image | image_url: width: 940 }} 940w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 1066 -%}{{ pcard_default_image | image_url: width: 1066 }} 1066w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 1500 -%}{{ pcard_default_image | image_url: width: 1500 }} 1500w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 1780 -%}{{ pcard_default_image | image_url: width: 1780 }} 1780w,{%- endif -%}
+                                {%- if pcard_default_image.width >= 2000 -%}{{ pcard_default_image | image_url: width: 2000 }} 2000w,{%- endif -%}
+                                {{ pcard_default_image | image_url }} {{ pcard_default_image.width }}w"
+                            src="{{ pcard_default_image | image_url: width: 533 }}"
+                            sizes="(min-width: {{ settings.container_width }}px) {{ settings.container_width | minus: 130 | divided_by: 4 }}px, (min-width: 990px) calc((100vw - 130px) / 4), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)"
+                            alt="{{ alt | default: pcard_default_image.alt | escape }}"
+                            loading="lazy"
+                            class="se-out w-full h-full"
+                            width="{{ pcard_default_image.width }}"
+                            height="{{ pcard_default_image.height }}"
+                            {{ image_attributes }}
+                        >
+                      </responsive-image>
+                  {% else %}
+                    <div style="--aspect-ratio: {{ image_ratio }}">
+                      {{ 'product-1' | placeholder_svg_tag: 'sf__placeholder-svg' }}
+                    </div>
+                  {% endif %}
+                {% endif %}
+            </a>
+          </div>
+
+          {%- if settings.show_badge_sale or show_on_sale_badge -%}
+            <div class="sf__pcard-tags absolute flex flex-wrap">
+              {% if settings.show_badge_sale %}
+                {% for tag in product.tags %}
+                  {% if tag contains 'tag__' %}
+                      {%- liquid 
+                          assign tag_content = tag | split: '__' | last
+                          assign type = tag_content | split: '_' | first
+                          assign tag_name = tag_content | split: '_' | last
+                      -%}
+                      <span class="py-0.5 px-2 mb-2 mr-2 font-medium rounded-xl text-white prod__tag prod__tag-{{ type }}">
+                          {{ tag_name }}
+                      </span>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+              {% if show_on_sale_badge %}
+                {%- liquid 
+                  if settings.on_sale_badge == 'show_percentage'
+                    assign sale_class = 'prod__tag-discounted'
+                  else
+                    assign sale_class = 'prod__tag-sale'
+                  endif
+                -%}
+                <span class="py-0.5 px-2 mb-2 mr-2 font-medium rounded-xl text-white prod__tag {{ sale_class }}">
+                  {%- if settings.on_sale_badge == 'show_text' -%}
+                    {{ 'products.product.on_sale' | t }}
+                  {%- endif -%}
+                  {%- if settings.on_sale_badge == 'show_percentage' -%}
+                    {% assign discount = discount | append: '%' %}
+                    {% render 'new-locale', key: 'products.product.discounted_price_html', param: '{{ value }}', value: discount %}
+                  {%- endif -%}
+                </span>
+              {% endif %}
+            </div>
+          {%- endif -%}
+
+          {%- if settings.show_badge_soldout -%}
+            <span class="prod__tag prod__tag--soldout" style="display: none;">{{ 'products.product.sold_out' | t }}</span>
+          {%- endif -%}
+    
+          {%- case card_style -%}
+            {%- when '2' -%}
+              {%- if settings.show_cart_button or settings.show_quickview_button or settings.show_wishlist_button or settings.show_compare_button -%}
+                <div class="sf__pcard-action">
+                  <div class="sf__pcard-group-action">
+                    {% liquid                    
+                      assign tooltips = 'add-to-cart,quickview,compare'
+                      assign tooltip_items = tooltips | split: ','
+                    %}
+                    
+                    {%- if settings.show_wishlist_button -%}
+                      {% assign wishlist_app = settings.wishlist_app %}
+                      {% if wishlist_app == 'growave' %}
+                        <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-top">
+                          <span class="sf__tooltip-icon block">
+                            {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                            {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                              {{ the_snippet_fave_icon }}
+                            {% else %}
+                              {% render 'mm-ssw-widget-faveicon' with product.id %}
+                            {% endunless %}
+                          </span>
+                          <div class="sf__tooltip-content " data-revert-text="">
+                            {{ 'products.product.add_to_wishlist' | t }}
+                          </div>
+                        </div>
+                      {% else %}
+                        {% liquid 
+                          render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-top' 
+                        %}
+                      {% endif %}
+                    {%- endif -%}
+                    
+                    {%- for tooltip in tooltip_items -%}
+                      {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                      {%- if settings[settings_key] -%}
+                        {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-top', is_preorder: is_preorder %}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+              
+            {%- when '3' -%}
+              {%- if settings.show_wishlist_button -%}
+                <div class="sf__pcard-action-top absolute">
+                  {% assign wishlist_app = settings.wishlist_app %}
+                  {% if wishlist_app == 'growave' %}
+                    <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-left">
+                      <span class="sf__tooltip-icon block">
+                        {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                        {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                          {{ the_snippet_fave_icon }}
+                        {% else %}
+                          {% render 'mm-ssw-widget-faveicon' with product.id %}
+                        {% endunless %}
+                      </span>
+                      <div class="sf__tooltip-content " data-revert-text="">
+                        {{ 'products.product.add_to_wishlist' | t }}
+                      </div>
+                    </div>
+                  {% else %}
+                    {% render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-left' %}
+                  {% endif %}
+                </div>
+              {%- endif -%}
+              {%- if settings.show_cart_button or settings.show_compare_button or settings.show_quickview_button -%}
+                <div class="sf__pcard-action">
+                  <div class="sf__pcard-group-action">
+                    {% liquid                    
+                      assign tooltips = 'add-to-cart,compare,quickview'
+                      assign tooltip_items = tooltips | split: ','
+                    %}
+                    
+                    {%- for tooltip in tooltip_items -%}
+                      {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                      {%- if settings[settings_key] -%}
+                        {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-top', is_preorder: is_preorder %}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+
+            {%- when '4' -%}
+              {%- if settings.show_quickview_button or settings.show_wishlist_button or settings.show_compare_button -%}
+                <div class="sf__pcard-action">
+                  <div class="sf__pcard-group-action">
+                    {% liquid
+                      assign tooltips = 'compare,quickview'
+                      assign tooltip_items = tooltips | split: ','
+                    %}
+                    
+                    {%- if settings.show_wishlist_button -%}
+                      {% assign wishlist_app = settings.wishlist_app %}
+                      {% if wishlist_app == 'growave' %}
+                        <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-top">
+                          <span class="sf__tooltip-icon block">
+                            {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                            {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                              {{ the_snippet_fave_icon }}
+                            {% else %}
+                              {% render 'mm-ssw-widget-faveicon' with product.id %}
+                            {% endunless %}
+                          </span>
+                          <div class="sf__tooltip-content " data-revert-text="">
+                            {{ 'products.product.add_to_wishlist' | t }}
+                          </div>
+                        </div>
+                      {% else %}
+                        {% liquid 
+                          render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-top' 
+                        %}
+                      {% endif %}
+                    {%- endif -%}
+                    
+                    {%- for tooltip in tooltip_items -%}
+                      {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                      {%- if settings[settings_key] -%}
+                        {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-top', is_preorder: is_preorder %}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            {%- when '5' -%}
+              {%- if settings.show_cart_button or settings.show_compare_button or settings.show_quickview_button -%}
+                <div class="sf__pcard-action">
+                  <div class="sf__pcard-group-action">
+                    {% liquid                    
+                      assign tooltips = 'add-to-cart,compare,quickview'
+                      assign tooltip_items = tooltips | split: ','
+                    %}
+                    
+                    {%- for tooltip in tooltip_items -%}
+                      {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                      {%- if settings[settings_key] -%}
+                        {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-left', is_preorder: is_preorder %}
+                      {%- endif -%}
+                    {%- endfor -%}
+                  </div>
+                </div>
+              {%- endif -%}
+            {%- else -%}
+              {%- if settings.show_quickview_button or settings.show_wishlist_button or settings.show_compare_button -%}
+                <div class="sf__pcard-action hidden md:block z-10">
+                  {% liquid                  
+                    assign tooltips = 'compare,quickview'
+                    assign tooltip_items = tooltips | split: ','
+                  %}
+                  
+                  {%- if settings.show_wishlist_button -%}
+                    {% assign wishlist_app = settings.wishlist_app %}
+                    {% if wishlist_app == 'growave' %}
+                      <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-left">
+                        <span class="sf__tooltip-icon block">
+                          {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                          {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                            {{ the_snippet_fave_icon }}
+                          {% else %}
+                            {% render 'mm-ssw-widget-faveicon' with product.id %}
+                          {% endunless %}
+                        </span>
+                        <div class="sf__tooltip-content " data-revert-text="">
+                          {{ 'products.product.add_to_wishlist' | t }}
+                        </div>
+                      </div>
+                    {% else %}
+                      {% liquid 
+                        render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-left' 
+                      %}
+                    {% endif %}
+                  {%- endif -%}
+                  
+                  {%- for tooltip in tooltip_items -%}
+                    {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                    {%- if settings[settings_key] -%}
+                      {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-left', is_preorder: is_preorder %}
+                    {%- endif -%}
+                  {%- endfor -%}
+                </div>
+              {%- endif -%}
+          {%- endcase -%}
+    
+          {% render 'product-card-countdown', product: product %} 
+    
+          {%- if sold_out == false and card_style == '1' -%}
+              {% render 'product-card-quick-add-btn', is_preorder: is_preorder, product: product, quick_add_text: quick_add_text, section: section %}
+            {% endif %}   
+        </div>
+      </div>
+      <div class="sf__pcard-content text-{{ pcard_alignment }} relative">
+        <div class="mt-3 lg:mt-5">
+          <div class="max-w-full w-full">
+            {%- if show_vendor -%}
+              <span class="sf__pcard-vendor block uppercase text-xs mb-2">{{ product.vendor }}</span>
+            {%- endif -%}
+            {% if show_title == true %}
+              <h3 class="block text-base">
+                <a href="{{ product.url }}" class="block mb-[5px] leading-normal sf__pcard-name font-medium truncate-lines hover:text-color-secondary{% if settings.uppercase_prd_name %} uppercase{% endif %}">
+                  {{ product.title }}
+                </a>
+              </h3>
+            {% endif %}
+            {% if settings.show_review_badge %}
+              <div class="sf-pcard__reviews">
+                {% render 'product-reviews-app__badge', product: product %}
+              </div>
+            {% endif %}
+          </div>
+        
+          <div class="sf__pcard-price leading-normal">
+            {% render 'product-prices', product: product, is_product_card: true %}
+          </div>
+          {% render 'product-card-option', product: product, show_variant_options: show_variant_options %}
+
+          {%- if card_style == '5' and settings.show_wishlist_button -%}
+            <div class="sf__pcard-action-top absolute">
+              {% assign wishlist_app = settings.wishlist_app %}
+              {% if wishlist_app == 'growave' %}
+                <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-left">
+                  <span class="sf__tooltip-icon block">
+                    {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                    {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                      {{ the_snippet_fave_icon }}
+                    {% else %}
+                      {% render 'mm-ssw-widget-faveicon' with product.id %}
+                    {% endunless %}
+                  </span>
+                  <div class="sf__tooltip-content " data-revert-text="">
+                    {{ 'products.product.add_to_wishlist' | t }}
+                  </div>
+                </div>
+              {% else %}
+                {% render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-left' %}
+              {% endif %}
+            </div>
+          {%- endif -%}
+        </div>
+    
+        {%- if sold_out == false and settings.show_cart_button and card_style == '4' -%}
+          <div class="sf__pcard-action-atc flex justify-center">
+            {% render 'product-card-quick-add-btn', is_preorder: is_preorder, product: product, quick_add_text: quick_add_text, section: section %}
+          </div>
+        {%- endif -%}
+    
+        <div class="content-view-list mt-5 hidden">
+          <div class="leading-7 text-color-secondary mb-4">
+            {{ product.description | strip_html | truncatewords: 15, '...' }}
+          </div>
+          <div class="flex items-start">
+            {% render 'product-card-quick-add-btn', is_preorder: is_preorder, product: product, quick_add_text: quick_add_text, section: section %}
+            <div class="grid grid-cols-3 gap-2.5 ml-2.5">
+              {% liquid
+                assign tooltips = 'compare,quickview'
+                assign tooltip_items = tooltips | split: ','
+              %}
+              
+              {%- if settings.show_wishlist_button and card_style != "3" -%}
+                {% assign wishlist_app = settings.wishlist_app %}
+                {% if wishlist_app == 'growave' %}
+                  <div class="sf__tooltip-item sf__tooltip-wishlist sf__btn-icon sf__tooltip-style-1 sf__tooltip-bottom">
+                    <span class="sf__tooltip-icon block">
+                      {% capture the_snippet_fave_icon %}{% render 'ssw-widget-faveicon' with product.id %}{% endcapture %}
+                      {% unless the_snippet_fave_icon contains 'Liquid error' %}
+                        {{ the_snippet_fave_icon }}
+                      {% else %}
+                        {% render 'mm-ssw-widget-faveicon' with product.id %}
+                      {% endunless %}
+                    </span>
+                    <div class="sf__tooltip-content " data-revert-text="">
+                      {{ 'products.product.add_to_wishlist' | t }}
+                    </div>
+                  </div>
+                {% else %}
+                  {% liquid 
+                    render 'tooltip', type: 'wishlist', product: product, class_name: 'sf__tooltip-bottom' 
+                  %}
+                {% endif %}
+              {%- endif -%}
+              
+              {%- for tooltip in tooltip_items -%}
+                {%- assign settings_key = 'show_' | append: tooltip | append: '_button' | replace: 'add-to-cart', 'cart' -%}
+                {%- if settings[settings_key] -%}
+                  {% render 'tooltip', type: tooltip, section: section, product: product, class_name: 'sf__tooltip-bottom', is_preorder: is_preorder %}
+                {%- endif -%}
+              {%- endfor -%}
+            </div>
+          </div>
+        </div>
+      </div>
+    {%- if card_style == '2' or card_style == '3' -%}<div class='background-color-expand'></div>{%- endif -%}
+    <input hidden name="id" required value="{{ variant_id }}" data-selected-variant="{{ selected_variant_id }}">
+  </div> <!-- .sf__pcard -->
+{%- if column_wrapper -%}</div><!-- .sf-column -->{%- endif -%}

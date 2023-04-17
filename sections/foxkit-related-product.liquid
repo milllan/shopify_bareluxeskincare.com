@@ -1,0 +1,124 @@
+<script src="{{ 'foxkit-related-products.min.js' | asset_url }}" defer="defer"></script>
+{%- assign st = section.settings -%}
+<div
+  class="sf-product__section foxkit-related-products hidden"
+  data-section-type="foxkit-related-products"
+  data-section-id="{{ section.id }}"
+  data-products-to-show="20"
+  data-products-per-row="{{ st.columns }}"
+  data-enable-slider="{{ st.enable_slider }}"
+  data-product-title="{{ product.title }}"
+  data-product-vendor="{{ product.vendor }}"
+  data-product-type="{{ product.type }}"
+  style="--column-gap: {{ st.column_gap }}px; --column-gap-mobile: 20px; --row-gap: {{ st.column_gap | plus: 10 }}px; --items: {{ st.columns }}"
+>
+  <div class="{{ st.container }}">
+    <div class="section__header text-{{ section.settings.text_align | default: 'left' }}">
+      <h2 class="sf-product__section-heading section__heading"></h2>
+    </div>
+    <div class="relative">
+      {%- capture grid_class -%}
+        md:grid-cols-{{ st.columns | minus: 1 }} xl:grid-cols-{{ st.columns }}
+      {%- endcapture -%}
+      <fox-related-product>
+      <div
+        class="sf-grid md:grid {{ grid_class | strip_newlines }}"
+        data-grid-container
+      >
+        <div class="swiper-wrapper" data-product-list></div>
+      </div>
+      {% if st.enable_slider %}
+        {% render 'slider-controls', absolute: true, show_nav: true, container: st.container, custom_class: 'hidden' %}
+      {% endif %}
+      </fox-related-product>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "[FoxKit] Related products",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Products settings",
+      "info": "Config your related product settings inside [FoxKit App](https://foxkit.app/product-recommendation)"
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "Text alignment",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "Layout settings"
+    },
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Products per row",
+      "default": 4,
+      "min": 3,
+      "max": 8
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Column gap",
+      "default": 30,
+      "min": 0,
+      "max": 50,
+      "step": 2
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": true
+    }
+  ],
+  "templates": [
+    "product"
+  ],
+  "presets": [
+    {
+      "name": "[FoxKit] Related products"
+    }
+  ]
+}
+{% endschema %}

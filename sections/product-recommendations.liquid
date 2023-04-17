@@ -1,0 +1,139 @@
+{%- liquid
+  assign product_id = product.id
+  assign st = section.settings
+-%}
+{%- capture gridClass -%}
+  md:grid-cols-{{ st.columns | minus: 1 }} xl:grid-cols-{{ st.columns }}
+{%- endcapture -%}
+<div
+  class="sf-product__section product-recommendations"
+  style="--column-gap: {{ st.column_gap }}px; --column-gap-mobile: 20px; --row-gap: {{ st.column_gap | plus: 10 }}px; --items: {{ st.columns }}"
+>
+  <product-recommendations
+    data-items-per-page="{{ st.columns }}"
+    data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product_id }}&limit={{ section.settings.limit | default: 4 }}"
+  >
+    {% if recommendations.performed and recommendations.products_count > 0 %}
+      <div class="{{ section.settings.container }} section-my">
+        {% assign default_heading = 'products.product.product_recommendation_heading' | t %}
+        <div class="section__header text-{{ section.settings.text_align | default: 'left' }}">
+          <h2 class="section__heading">{{ st.heading | default: default_heading }}</h2>
+        </div>
+        <div class="relative">
+          <div
+            class="sf-grid md:grid {{ gridClass | strip_newlines }} {% if st.enable_slider %} swiper-container{% endif %}"
+          >
+            {%- if st.enable_slider -%}
+              <div class="swiper-wrapper">
+                {% for product in recommendations.products %}
+                  <div class="sf-column swiper-slide">
+                    {% render 'product-card', product: product %}
+                  </div>
+                {% endfor %}
+              </div>
+            {%- else -%}
+              {% for product in recommendations.products %}
+                <div class="sf-column">
+                  {% render 'product-card', product: product %}
+                </div>
+              {% endfor %}
+            {%- endif -%}
+          </div>
+          {% if st.enable_slider %}
+            {% render 'slider-controls', absolute: true, show_nav: true, container: st.container %}
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </product-recommendations>
+</div>
+
+{% schema %}
+{
+  "name": "Product recommendations",
+  "settings": [
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "You Might Also Like",
+      "placeholder": "Product recommendations"
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "Text alignment",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Products to show",
+      "default": 8,
+      "min": 3,
+      "max": 20
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Products per row",
+      "default": 4,
+      "min": 3,
+      "max": 8
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Column gap",
+      "default": 30,
+      "min": 0,
+      "max": 50,
+      "step": 2
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": true
+    }
+  ],
+  "templates": [
+    "product"
+  ],
+  "presets": [
+    {
+      "name": "Product recommendations"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,10 @@
+{% unless cart.cart_level_discount_applications.size == 0 %}
+  <ul class="scd-cart__discounts" role="list" data-discounts-list>
+  {% for discount in cart.cart_level_discount_applications %}
+    <li>
+      <svg aria-hidden="true" width="20" height="20" focusable="false" role="presentation" viewBox="0 0 12 13"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 .5h3a2 2 0 0 1 2 2v3a.995.995 0 0 1-.293.707l-6 6a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 0-1.414l6-6A.995.995 0 0 1 7 .5zm2 2a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill="currentColor"></path></svg>
+      <span>{{ discount.title | upcase }}&nbsp;(-{{ discount.total_allocated_amount | money }})</span>
+    </li>
+  {% endfor %}
+  </ul>
+{% endunless %}

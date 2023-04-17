@@ -1,0 +1,323 @@
+{%- liquid 
+    assign menu_id = menu | default: 'main_menu'
+-%}
+
+<div class="{{ box_size }} flex {{ justify }} items-center sf-no-scroll-bar sf-menu-wrapper__desktop">
+    <ul class="sf-nav flex flex-wrap text-base font-medium whitespace-nowrap sf-no-scroll-bar {{ nav_class }}">
+        {% for link in linklists[section.settings[menu_id]].links %}
+            {% liquid
+              assign three_level = false
+              assign li_class = 'sf-menu-item list-none'
+              assign box_size = 'block px-4 py-5'
+              assign is_mega = true
+              assign stretch_width = false
+      
+              if link.links != blank
+                  if link.levels == 2
+                      assign three_level = true
+                  endif
+              endif
+      
+              assign title_handle = link.title | handleize
+              assign has_mega_item = false
+            %}
+            {% for block in section.blocks %}
+                {% liquid
+                  assign menu_title = block.settings.heading | handleize
+    
+                  if menu_title == blank or menu_title != title_handle
+                      continue
+                  endif
+                %}
+                {% if menu_title == title_handle %}
+                    {% liquid
+                      assign has_mega_item = true
+                      if block.settings.container == 'inherit'
+                        assign dropdown_container = section.settings.container
+                      else
+                        assign dropdown_container = block.settings.container
+                      endif
+                    %}
+    
+                    {% case block.type %}
+                        {% when 'banner' %}
+                            {% capture block_type %}
+                                {% if block.settings.banner_image != blank %}
+                                    <div class="sf-menu__banner h-full">
+                                        {% if block.settings.banner_style != 'inside' %}
+                                            <div class="sf-menu__banner-inner">
+                                                <a href="{{ block.settings.banner_link }}" class="sf__hover-zoom-in">
+                                                    {% render 'responsive-image', image: block.settings.banner_image, sizes: '500px' %}
+                                                </a>
+                                                <div class="mt-4 flex flex-col">
+                                                    {% if block.settings.banner_title != blank %}
+                                                        <a href="{{ block.settings.banner_link }}" class="text-black font-normal block text-[24px]">{{ block.settings.banner_title }}</a>
+                                                    {% endif %}
+                                                    {% if block.settings.banner_desc != blank %}
+                                                        <p class="font-base text-black opacity-60">{{ block.settings.banner_desc }}</p>
+                                                    {% endif %}
+                                                    {% if block.settings.banner_button_text != blank %}
+                                                        <p><a href="{{ block.settings.banner_link }}" class="text-black sf__btn sf__btn-link mt-2">{{ block.settings.banner_button_text }}</a></p>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% else %}
+                                            <div class="image-card h-full">
+                                                <div class="image-card__inner relative h-full">
+                                                    <a class="image-card__img block h-full absolute w-full" href="{{ block.settings.banner_link | default: "#" }}">
+                                                        {% render 'responsive-image', image: block.settings.banner_image, sizes: '500px', wrapper_class: 'w-full h-full' %}
+                                                    </a>
+                                                    {% if block.settings.banner_title != blank or block.settings.banner_desc != blank %}
+                                                        <div class="absolute top-[1.7rem] left-[1.5rem]">
+                                                            {% if block.settings.banner_title != blank %}
+                                                                <h3 class="text-black text-[24px] mb-2">{{ block.settings.banner_title }}</h3>
+                                                            {% endif %}
+                                                            {% if block.settings.banner_desc != blank %}
+                                                                <p class="font-base text-black opacity-60">{{ block.settings.banner_desc }}</p>
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if block.settings.banner_button_text != blank %}
+                                                        <a href="{{ block.settings.banner_link }}" class="absolute text-black bottom-[20px] left-[1.5rem] sf__btn sf__btn-link" style="position: absolute;">{{ block.settings.banner_button_text }}</a>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endcapture %}
+                        {% when 'bloglist' %}
+                            {% capture block_type %}
+                                <div class="md:pl-4 xl:pl-16 border-color-border border-l">
+                                    {% assign blog = blogs[block.settings.blog] %}
+                                    <ul class="flex flex-col">
+                                        {% for article in blog.articles limit: 3 %}
+                                            {% assign mb = '' %}
+                                            {% if forloop.last != true %}
+                                                {% assign mb = 'mb-8' %}
+                                            {% endif %}
+                                
+                                            <li class="flex {{ mb }}">
+                                                <a href="{{ article.url }}" class="w-1/4">
+                                                    {% render 'responsive-image',
+                                                        image: article.image,
+                                                        wrapper_class: 'w-full',
+                                                        wrapper_class: 'mb-2',
+                                                        aspect_ratio: '16/9',
+                                                        sizes: '200px'
+                                                    %}
+                                                </a>
+                                                <div class="pl-5 w-3/4 whitespace-normal text-black">
+                                                    {% if article.tags != blank %}
+                                                        <span class="block mb-1 uppercase text-xs">{{ article.tags[0] }}</span>
+                                                    {% endif %}
+                                                    <a href="{{ article.url }}" class="font-medium">{{ article.title }}</a>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endcapture %}
+                        {% when 'product-list' %}
+                            {% assign stretch_width = block.settings.stretch_width %}
+                            {% assign collection = block.settings.collection %}
+                            {% if collection != blank %}
+                              {% capture block_type %}
+                                  <div
+                                        class="sf-mega-menu-products md:pl-4 xl:pl-12"
+                                        data-id="{{ block.id }}"
+                                    >
+                                        {%- assign collection = collections[block.settings.collection] -%}
+                                        <div class="banner-header flex justify-between mb-4 items-center mt-[-10px]">
+                                            <h3 class="whitespace-normal text-2xl block font-medium text-black">{{ collection.title }}</h3>
+                                            {% if block.settings.limit > block.settings.columns %}
+                                            <div id="sf-slider-controls-{{ block.id }}" class="sf-slider__controls flex items-center mr-[-1rem]">
+                                                <button class="sf-slider__controls-prev cursor-pointer text-black rounded-full">
+                                                    <svg width="14px" height="14px" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/></svg>
+                                                </button>
+                                                <button class="sf-slider__controls-next cursor-pointer text-black rounded-full">
+                                                    <svg fill="currentColor" width="14px" height="14px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/></svg>
+                                                </button>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="sf-grid sf-slider-{{ block.id }} swiper-container" data-column="{{ block.settings.columns }}" style="--column-gap: 1.25rem">
+                                            <div class="swiper-wrapper">
+                                                {% for product in collection.products limit: block.settings.limit %}
+                                                {%- assign image_ratio = product.featured_image.aspect_ratio | default: '1/1' -%}
+                                                    <div class="swiper-slide sf-column">
+                                                        <a class="block" href="{{ product.url }}">
+                                                            {% render 'responsive-image',
+                                                                image: product.featured_image,
+                                                                image_class: 'object-contain object-top',
+                                                                wrapper_class: 'mb-[10px]',
+                                                                aspect_ratio: image_ratio,
+                                                                sizes: '400px'
+                                                            %}
+                                                            <h3 class="font-medium mb-1 text-base whitespace-normal leading-normal text-black">
+                                                                {{ product.title | default: 'homepage.onboarding.product_title' }}
+                                                            </h3>
+                                                            <p class="text-sm font-normal text-color-regular-price">{{ product.price | money }}</p>
+                                                        </a>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                              {% endcapture %}
+                            {% endif %}
+                        {% when 'collection-list' %}
+                            {% capture block_type %}
+                                {% assign stretch_width = true %}
+                                {% assign collection_ids = 'collection_1,collection_2,collection_3,collection_4,collection_5,collection_6' | split: ',' %}
+                                <div
+                                    class="sf-mega-menu-collections md:pl-4 xl:pl-12"
+                                    data-id="{{ block.id }}"
+                                >
+                                    <div class="sf-grid flex" style="--column-gap: 1.25rem">
+                                        {% for collection_id in collection_ids %}
+                                            {% liquid
+                                              if block.settings[collection_id] == blank
+                                                continue
+                                              endif
+                                              assign collection_handle = block.settings[collection_id]
+                                              assign collection = collections[collection_handle]
+                                              assign collection_image = collection.image
+                                              assign image_id = 'image_' | append: forloop.index
+      
+                                              if block.settings[image_id] != blank
+                                                  assign collection_image = block.settings[image_id]
+                                              endif
+                                            %}
+                                            <div class="sf-column flex-1">
+                                                <div class="collection-card collection-card--standard">
+                                                    <div class="collection-card__inner">
+                                                        <a href="{{ collection.url }}" class="collection-card__image block group overflow-hidden w-full">
+                                                            {% if collection_image != blank %}
+                                                                {%- assign image_ratio = product.collection_image.aspect_ratio | default: '1/1' -%}
+                                                                {% render 'responsive-image', image: collection_image, aspect_ratio: image_ratio %}
+                                                            {% else %}
+                                                                <div style="--aspect-ratio: 1/1;">
+                                                                    {% capture current %}{% cycle 1, 2, 3, 4, 5, 6 %}{% endcapture %}
+                                                                    {{ 'collection-' | append: current | placeholder_svg_tag: 'sf__placeholder-svg w-full h-full w-full h-full object-cover' }}
+                                                                </div>
+                                                            {% endif %}
+                                                        </a>
+                                                        <h3 class="mt-5 text-left">
+                                                            <a class="md:text-xl font-medium block md:pr-4 text-black" href="{{ collection.url | default: "#" }}">
+                                                                {{ collection.title | default: default_label }}
+                                                                <sup class="font-semibold text-xs text-black">{{ collection.all_products_count }}</sup>
+                                                            </a>
+                                                        </h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endcapture %}
+                        {% when 'custom_html' %}
+                            {% capture block_type %}
+                                {% if block.settings.html != blank %}
+                                    <div class="menu-item__html text-black">
+                                        {{ block.settings.html }}
+                                    </div>
+                                {% endif %}
+                            {% endcapture %}
+                        {% else %}
+                            {% liquid
+                              capture block_type 
+                              endcapture
+                            %}
+                    {% endcase %}
+                {% endif %}
+            {% endfor %}
+    
+            {% if three_level != true and has_mega_item == false %}
+                {% assign li_class = li_class | append: ' sf-menu-item--no-mega' %}
+                {% assign is_mega = false %}
+            {% endif %}
+    
+            {% if link.links != blank %}
+                <li class="{{ li_class }} sf__menu-item-level1 sf-menu-item-parent{% if is_mega %} sf-menu-item--mega{% endif %}" data-index="{{ forloop.index0 }}">
+                    <a href="{{ link.url }}" class="{{ box_size }} sf__sub-menu-link1 flex items-center sf__parent-item{% if section.settings.uppercase_parent_level %} uppercase{% endif %}">{{ link.title }}
+                        <span class="ml-2 sf-menu__arrow">
+                            <svg class="w-2 h-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                <path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z" class=""></path>
+                            </svg>
+                        </span>
+                    </a>
+                    {% if link.links != blank %}
+                        <div
+                            class="sf-menu__submenu sf-menu__desktop-sub-menu pointer-events-none absolute z-50 inset-x-0{% if is_mega == false %} sf-menu__dropdown min-w-max bg-white{% else %}{% endif %}"
+                            style="--total-columns: {{ link.links.size }}"
+                        >
+                            <div class="sf-menu__inner">
+                                <div class="{% if is_mega %}{{ dropdown_container | default: 'container' }}{% endif %} mx-auto{% if dropdown_container == 'w-full' %} px-5{% endif %}">
+                                    <div class="sf-menu-submenu__content{% if stretch_width == true %} sf-menu-submenu--stretch-width{% endif %} flex{% if is_mega == false %} p-4 {% else %} py-12{% endif %}">
+                                        <ul class="sf-menu-submenu__items flex {% if is_mega == false %} flex-col w-full{% else %} -mx-2{% if stretch_width == false and block_type != blank %} w-2/3{% else %} w-full{% endif %}{% endif %}">
+                                            {% for childlink in link.links %}
+                                                <li class="list-none sf__menu-item-level2 {% if is_mega %} w-1/2 xl:w-1/3 2xl:w-1/4 mb-4{% else %} w-full leading-9{% endif %}{% if stretch_width == true %} min-w-[200px] pr-2{% endif %}">
+                                                    <a href="{{ childlink.url }}" class="sf__sub-menu-link2 whitespace-normal block{% if is_mega %} sf-menu-submenu__title{% else %} sf-sub-menu__link{% endif %}">{{ childlink.title }}</a>
+                                                    {% if childlink.links != blank %}
+                                                        <div class="sf__sub-menu-column mt-4">
+                                                            <ul class="leading-8">
+                                                                {% for grandlink in childlink.links %}
+                                                                    <li class="list-none sf__menu-item-level3">
+                                                                        <a href="{{ grandlink.url }}" class="sf-sub-menu__link">
+                                                                            {{ grandlink.title }}
+                                                                        </a>
+                                                                    </li>
+                                                                {% endfor %}
+                                                            </ul>
+                                                        </div>
+                                                    {% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% if has_mega_item == true and block_type != blank %}
+                                            <div class="sf-menu-submenu__addon pl-5{% if stretch_width == false %} w-1/3{% endif %}">
+                                                {{ block_type }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li class="{{ li_class }} sf-menu-item-parent{% if is_mega %} sf-menu-item--mega{% endif %}" data-index="{{ forloop.index0 }}">
+                    <a href="{{ link.url }}" class="{{ box_size }} flex items-center sf__parent-item{% if section.settings.uppercase_parent_level %} uppercase{% endif %}">
+                        {{ link.title }}
+                        {% if is_mega %}
+                            <span class="ml-2 sf-menu__arrow">
+                                <svg class="w-2 h-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                    <path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z" class=""></path>
+                                </svg>
+                            </span>
+                        {% endif %}
+                    </a>
+                    {% if is_mega and block_type != blank %}
+                        <div class="sf-menu__submenu sf-menu__desktop-sub-menu absolute z-50 inset-x-0">
+                            <div class="sf-menu__inner">
+                                <div class="{{ dropdown_container }} mx-auto">
+                                    <div class="sf-menu-submenu__content py-12 flex px-4">
+                                        <div class="w-full">
+                                            {{ block_type }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </li>
+            {% endif %}
+            {% if section.settings.header_design == '2l-menu-with-icons' and forloop.last == false %}
+                <div class="px-3 py-4 hidden lg:flex items-center">
+                    <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.1 171.5L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6zM388.6 312.3l23.7 138.4L288 385.4l-124.3 65.3 23.7-138.4-100.6-98 139-20.2 62.2-126 62.2 126 139 20.2-100.6 98z"/></svg>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</div>

@@ -1,0 +1,57 @@
+{%- assign st = section.settings -%}
+
+{%- if st.show_filter or st.show_sorting -%}
+  {%- assign position = st.sidebar -%}
+  {%- assign sidebar_title = st.sidebar_title -%}
+
+  <div class="sf__sidebar touch-none {% unless show_filter %}hidden{% endunless %}" data-type="{{ position }}">
+    <div class="sf__sidebar-content overscroll-contain h-full{% if sidebar_title == blank %} sf__sidebar--no-title{% endif %}">
+      {%- if sidebar_title != blank -%}
+        <h3 class="text-3xl p-5 font-medium {% if position != 'fixed' %}xl:px-0 xl:mb-8 xl:py-0{% endif %}">{{ sidebar_title }}</h3>
+      {%- endif -%}
+      <div class="sf__sidebar-close cursor-pointer absolute top-4 right-4{% if position != 'fixed' %} xl:hidden{% endif %}">
+        {%- render 'icon', name: 'x', size: 'large' -%}
+      </div>
+      <div class="p-5 pt-0 {% if position != 'fixed' %} xl:p-0{% endif %}">
+        <div class="sf__filter-wrapper">
+          {%- if st.filters_type == 'storefront_filters' -%}
+            {%- for block in section.blocks -%}
+              {%- if block.type == 'collections' -%}
+                {% liquid
+                  assign menu = linklists[block.settings.menu]
+                  assign use_accordion = block.settings.use_accordion
+                  assign open_filtergroup = block.settings.open_filtergroup
+                  assign show_image = block.settings.show_image
+                %}
+                <div class="widget-filter mb-8 {% if use_accordion %}sf__accordion-item{% endif %}{% if use_accordion and open_filtergroup %} open{% endif %}" data-block-type="collections">
+                  <h4 class="{% if use_accordion %}sf__accordion-button{% endif %} mb-4 font-medium !text-lg">{{ block.settings.title }}</h4>
+                  <div class="widget-filter__list max-h-full widget-filter--collections {% if use_accordion %} sf__accordion-content{% endif %}"{%- if open_filtergroup -%} style="opacity: 1;"{%- endif -%}>
+                    {% if menu.links != blank %}
+                    <ul class="sf__list-row">
+                      {% for link in menu.links %}
+                        {% if link.url contains '/collections/' %}
+                        <li class="link-lv2 leading-8 hover-underline{% if link.active %} active pointer-events-none{% endif %}" data-tag-filter>
+                          <a href="{{ link.url }}" title="{{ link.title }}" class="widget-filter__list-link" data-collection-link>
+                            {% if show_image and link.object.image != blank %}
+                              {% render 'responsive-image', image: link.object.image, alt: link.title, aspect_ratio: '1/1' %}
+                            {% endif %}
+                            <span>{{ link.title }}</span>
+                          </a>
+                        </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                    {% endif %}
+                  </div>
+                </div>
+              {%- endif -%}
+            {%- endfor -%}
+            {% render 'storefront-filters', section: section, results: collection %}
+          {%- else -%}
+            {% render 'filter-by-tags', section: section %}
+          {%- endif -%}
+        </div>
+      </div>
+    </div>
+  </div>
+{%- endif -%}

@@ -1,0 +1,81 @@
+<!-- <div class="form-success hide" data-reset-success>
+  {{ 'customer.recover_password.success' | t }}
+</div> -->
+<div class="text-center sf__page-header section__header">
+  <h1 class="section__heading">{{ 'customer.login.title' | t }}</h1>
+  {% render 'breadcrumb', container: 'container', justify: 'center' %}
+</div>
+<div class="sf-customer__forms pb-7 md:pb-15 md:w-11/12 lg:w-3/4 xl:w-2/3 2xl:w-1/2 md:flex mx-auto">
+  <div class="sf-customer__login mx-4 lg:mx-10 md:w-1/2">
+    <h3 class="text-2xl font-medium mb:3 md:mb-6">{{ 'customer.login.title' | t }}</h3>
+    {% form 'recover_customer_password' %}
+      {% if form.posted_successfully? %}
+        <div class="notification show success mt-5 mb-2 text-base sf-customer__recover-form-posted">
+            {{ 'customer.recover_password.success' | t }}
+        </div>
+        {% endif %}
+        {% render 'form__error', form: form %}
+    {% endform %}
+    <div data-login-form class="flex flex-col-reverse">
+      {% form 'customer_login' %}
+      {%- comment -%}
+      {% if form.posted_successfully? %}
+      <div class="notification show success mb-3 text-base">
+          {{ 'customer.recover_password.success' | t }}
+      </div>
+      {% endif %}
+      {%- endcomment -%}
+      {% render 'form__error', form: form %}
+  
+      <input type="email" name="customer[email]" placeholder="{{ 'customer.login.email' | t }}" class="form-control" />
+      <input type="password" name="customer[password]" placeholder="{{ 'customer.login.password' | t }}" class="form-control" />
+  
+      <a class="underline block my-3 sf-customer__reset-password-btn">{{ 'customer.login.forgot_password' | t }}</a>
+      <button class="sf__btn sf__btn-primary mt-4  mb-3 w-full" type="submit">
+          {{ 'customer.login.sign_in' | t }}
+      </button>
+      {% endform %}
+    </div>
+  </div>
+  <div class="sf-customer__reset-password hidden mx-4 lg:mx-10 md:w-1/2">
+    <h3 class="text-2xl font-medium">{{ 'customer.recover_password.title' | t }}</h3>
+    <p class="mt-4 mb-2 text-color-secondary">{{ 'customer.recover_password.subtext' | t }}</p>
+    
+    <div data-recover-form>
+      {% form 'recover_customer_password' %}
+      {% if form.posted_successfully? %}
+          <div class="notification show success mt-5 mb-2 text-base sf-customer__recover-form-posted">
+              {{ 'customer.recover_password.success' | t }}
+          </div>
+      {% endif %}
+      {% render 'form__error', form: form %}
+  
+      <input class="form-control" type="email" name="email"
+          placeholder="{{ 'customer.recover_password.email' | t }}" spellcheck="false" autocomplete="off"
+          autocapitalize="off" />
+  
+      <div class="flex mt-2">
+          <button type="submit" class="sf__btn sf__btn-primary block w-40">
+              {{ 'customer.recover_password.submit' | t }}
+          </button>
+          <button type="button" data-recover-toggle
+              class="sf__btn-secondary sf-customer__cancel-reset block w-40 ml-4">
+              {{ 'customer.recover_password.cancel' | t }}
+          </button>
+      </div>
+      {% endform %}
+    </div>
+  </div>
+  <div class="mx-4 lg:mx-10 md:w-1/2 mt-12 md:mt-0">
+    <h3 class="text-2xl font-medium mb-6">{{ 'customer.login.new_customer' | t }}</h3>
+    <p class="mb-6 text-color-secondary">
+        {{ 'customer.register.description' | t }}
+    </p>
+    <a
+      class="sf__btn sf__btn-primary"
+      href="{{ routes.account_register_url }}"
+    >
+      {{ 'customer.register.title' | t }}
+    </a>
+  </div>
+</div>

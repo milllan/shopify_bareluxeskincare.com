@@ -1,0 +1,36 @@
+{%- liquid 
+  assign atc_text = 'products.product.add_to_cart' | t
+  capture is_preorder
+    render 'check-preorder', product: product
+  endcapture
+-%}
+
+{% if is_preorder == "true" %}
+  {%- capture btn_text -%}
+    {% render 'new-locale', key: 'products.product.preorder' %}
+  {%- endcapture -%}
+  <input type="hidden" name="properties[_{% render 'new-locale', key: 'products.product.preorder_note' %}]" value="true">
+  <input type="hidden" name="properties[_foxDiscount[plugin]]" value="PreOrder">
+  <input type="hidden" name="properties[_foxDiscount[offer_id]]" value="{{ product.metafields.foxkit.preorder.id }}">
+{% endif %}
+
+<button
+  type="submit"
+  name="add"
+  class="add-to-cart sf__btn flex-grow shrink not-change relative {{ class }} {% unless product.selected_or_first_available_variant.available %}disabled{% endunless %}"
+  data-atc-text="{{ btn_text | default: atc_text }}"
+>
+  <span class="atc-spinner inset-0 absolute items-center justify-center">
+    <svg class="animate-spin w-[20px] h-[20px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </span>
+  <span class="not-change atc-text">
+    {% if product.selected_or_first_available_variant.available %}
+      {{ btn_text | default: atc_text }}
+    {% else %}
+      {{ 'products.product.sold_out' | t }}
+    {% endif %}
+  </span>
+</button>

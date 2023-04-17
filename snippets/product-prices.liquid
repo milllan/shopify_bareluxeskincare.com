@@ -1,0 +1,124 @@
+<style>
+  .f-price__sale,
+  .f-price__availability,
+  .f-price .f-price__badge-sale,
+  .f-price .f-price__badge-sold-out,
+  .f-price--on-sale .f-price__regular,
+  .f-price--on-sale .f-price__availability,
+  .f-price--no-compare .f-price__compare {
+    display: none;
+  }
+
+  .f-price--on-sale .f-price__sale {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .f-price--sold-out .f-price__badge-sold-out, .f-price--on-sale .f-price__badge-sale, .f-price--sold-out .f-price__badges, .f-price--on-sale .f-price__badges {
+    display: inline-flex;
+  }
+  .f-price__unit-wrapper {
+    width: 100%;
+  }
+</style>
+{%- liquid
+  assign selected_variant = product.selected_or_first_available_variant
+  if use_variant
+    assign target = selected_variant
+  else
+    assign target = product
+  endif
+
+  assign compare_at_price = target.compare_at_price
+  assign price = target.price | default: 1999
+
+  if is_product_card and settings.pcard_show_lowest_prices
+    assign price = product.price
+    assign compare_at_price = product.compare_at_price
+  endif
+
+  assign available = target.available | default: false
+  assign money_price = price | money
+
+  if settings.currency_code_enabled
+    assign money_price = price | money_with_currency
+  endif
+
+  if target == product and product.price_varies and settings.pcard_show_lowest_prices
+    assign money_price = 'products.product.from_text_html' | t: price: money_price
+  endif
+-%}
+
+<div class="f-price inline-flex items-center flex-wrap
+  {%- if alignment %} f-price--{{ alignment }}{% endif -%}
+  {%- if price_class %} {{ price_class }}{% endif -%}
+  {%- if available == false %} f-price--sold-out {% endif -%}
+  {%- if compare_at_price > price %} f-price--on-sale {% endif -%}
+  {%- if product.price_varies == false and product.compare_at_price_varies %} f-price--no-compare{% endif -%}">
+
+  <div class="f-price__regular">
+    <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.regular_price' | t }}</span>
+    <span class="f-price-item f-price-item--regular {{ price_text_size }}">
+        {{ money_price }}
+      </span>
+  </div>
+  <div class="f-price__sale">
+    <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.sale_price' | t }}</span>
+    <span class="f-price-item f-price-item--sale {{ price_text_size }} prod__price text-color-regular-price">
+        {{ money_price }}
+      </span>
+    {%- unless product.price_varies == false and product.compare_at_price_varies %}
+      <span class="visually-hidden visually-hidden--inline">{{ 'products.product.price.regular_price' | t }}</span>
+      <s class="f-price-item f-price-item--regular prod__compare_price ml-2 line-through text-color-secondary flex items-center">
+        {% if settings.currency_code_enabled %}
+          {{ compare_at_price | money_with_currency }}
+        {% else %}
+          {{ compare_at_price | money }}
+        {% endif %}
+      </s>
+    {%- endunless -%}
+  </div>
+  <div class="f-price__unit-wrapper{% if selected_variant.unit_price_measurement == nil %} hidden{% endif %}">
+    <span class="visually-hidden">{{ 'products.product.price.unit_price' | t }}</span>
+    <div class="f-price__unit">
+      {%- capture unit_price_separator -%}
+        <span aria-hidden="true">/</span>
+      {%- endcapture -%}
+      {%- capture unit_price_base_unit -%}
+        <span data-unit-price-base-unit>
+            {%- if selected_variant.unit_price_measurement -%}
+              {%- if selected_variant.unit_price_measurement.reference_value != 1 -%}
+                {{- selected_variant.unit_price_measurement.reference_value -}}
+              {%- endif -%}
+              {{ selected_variant.unit_price_measurement.reference_unit }}
+            {%- endif -%}
+          </span>
+      {%- endcapture -%}
+      <span data-unit-price>{{ selected_variant.unit_price | money }}</span>{{- unit_price_separator -}}{{- unit_price_base_unit -}}
+    </div>
+  </div>
+
+  {% if show_sale_badge or show_soldout_badge %}
+    <div class="f-price__badges">
+      {% if show_sale_badge %}
+        {% liquid
+          assign discount = 0
+          if compare_at_price > price
+            assign discount = compare_at_price | minus: price | times: 100 | divided_by: compare_at_price | append: '%'
+          endif
+        %}
+        <div class="f-price__badge-sale" data-type="{{ sale_badge_type }}">
+          <span class="f-badge f-badge--sale py-0.5 px-2 ml-3 font-medium rounded-xl prod__tag prod__tag-saving prod__tag-discounted">
+            {% render 'new-locale', key: 'products.product.save_html', param: '{{ amount }}', value: discount %}
+          </span>
+        </div>
+      {% endif %}
+      {% if show_soldout_badge %}
+        <div class="f-price__badge-sold-out">
+          <span class="f-badge f-badge--soldout">{{ 'products.product.sold_out' | t }}</span>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

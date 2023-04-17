@@ -1,0 +1,402 @@
+{{ 'hero.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  assign show_overlay = section.settings.show_overlay
+  assign parallax = section.settings.parallax
+  assign hero_height = section.settings.hero_size
+
+  if hero_height == 'adapt'
+    assign aspect_ratio = image.aspect_ratio | default: 2.333
+    assign aspect_ratio_mobile = image.aspect_ratio | default: 1.778
+  endif
+
+  assign content_positions = section.settings.content_position | split: ' '
+  assign text_horizontal_alignment = content_positions.first
+  assign text_vertical_alignment = content_positions.last | strip
+  assign text_size = section.settings.text_size
+  assign container = section.settings.container
+  assign image_link = section.settings.image_link
+
+  assign content_container = 'container-fluid'
+  if section.settings.content_in_container == true
+    assign content_container = 'container'
+  endif
+%}
+
+<section id="sf__hero-{{ section.id }}" class="{{ section.settings.custom_class }}" data-section-type="hero" data-section-id="{{ section.id }}">
+    <div class="{{ container }}" style="--content-color: {{ section.settings.text_color }};">
+        <m-hero
+            data-parallax="{{ parallax }}"
+            id="sf-hero-{{ section.id }}"
+            class="sf-hero block {% if image_link != blank %} sf-hero--has-link{% endif %}{% if section.settings.mb_image != blank %} sf-hero__mobile-no-overlay{% endif %} sf-hero--text-{{ section.settings.text_color }} sf-hero--{{ section.settings.hero_size }}{% if show_overlay %} sf-hero--has-overlay{% endif %}{% unless section.settings.use_content_above %} sf-hero--content-stack mb-10 md:mb-0{% endunless %}"
+        >
+            {% liquid
+              assign data_type = 'mp4'
+              assign videoSources = section.settings.shopify_video.sources[1]
+              assign video_url = videoSources.url
+              assign placeholder_video = 'https://cdn.shopify.com/videos/c/o/v/fbb140fd46e3429eba459e1549dbbe38.mp4'
+      
+              if section.settings.video_type == 'shopify' and video_url == blank and request.design_mode
+                assign video_url = placeholder_video
+              endif
+              case section.settings.video_type
+                when 'external'
+                  assign video_url = section.settings.video_url
+                  if section.settings.video_url.type == 'youtube'
+                    assign data_type = 'youtube'
+                  else
+                    assign data_type = 'vimeo'
+                  endif
+              endcase
+            %}
+            {% unless video_url == blank %}
+              <div
+                class="sf-hero__bg"
+                {%- if hero_height == 'adapt' -%}
+                  style="--aspect-ratio: {{ aspect_ratio }};--aspect-ratio-mobile: {{ aspect_ratio_mobile }}"
+                {% endif %}
+              >
+                <m-video-component
+                  class="sf-video__bg"
+                  data-init="false"
+                  data-type="{{ data_type }}"
+                  data-video-id="{{ section.settings.video_url.id }}"
+                >
+                  {% if section.settings.video_type == 'shopify' and video_url != blank %}
+                    <video src="{{ video_url }}" playsinline autoplay muted loop></video>
+                  {% endif %}
+                </m-video-component>
+              </div>
+            {% endunless %}
+
+            {% liquid
+              assign content_padding = 'py-10 md:py-15 lg:py-24'
+              if section.settings.use_content_above
+                assign text_color = 'text-' | append: section.settings.text_color
+              else
+                assign content_padding = 'pt-7 pb-2 md:py-10 lg:py-24'
+                assign text_color = 'text-black md:text-' | append: section.settings.text_color
+              endif
+            %}
+            <div class="flex sf-hero__inner absolute inset-0 {{ content_container }} {{ content_padding }} sf-hero__inner--{{ text_vertical_alignment }}-{{ text_horizontal_alignment }}">
+                <div class="sf-hero__content w-max md:max-w-4xl  text-{{ section.settings.text_alignment }}">
+                    {% if section.settings.subtitle != blank %}
+                        <span class="{% if text_size == 'medium' %}text-base {% else %}text-xl {% endif %} mb-2 md:mb-4 sf-hero__subtitle {{ text_color }}">{{ section.settings.subtitle }}</span>
+                    {% endif %}
+                    {% if section.settings.title != blank %}
+                        <h3 class="{% if text_size == 'medium' %}text-3xl md:text-5xl {% else %}text-3xl md:text-5xl 2xl:text-6xl {% endif %} 2xl:leading-snug md:leading-snug mb-3 md:mb-6 lg:font-medium sf-hero__title {{ text_color }}">{{ section.settings.title }}</h3>
+                    {% endif %}
+                    {% if section.settings.text != blank %}
+                        <div class="{% if text_size == 'medium' %}text-base {% else %}text-lg {% endif %} mb-4 md:mb-6 sf-hero__text {{ text_color }}">{{ section.settings.text }}</div>
+                    {% endif %}
+                    {% if section.settings.button_label != blank %}
+                        <div class="sf-hero__btn">
+                            <a href="{{ section.settings.button_link }}" class="sf__btn {{ section.settings.button_style }} {{ section.settings.button_size }}">{{ section.settings.button_label }}</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </m-hero>
+    </div>
+</section>
+
+{% schema %}
+{
+  "name": "Video hero",
+  "settings": [
+    {
+      "type": "header",
+      "content": "General"
+    },
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "w-full",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "hero_size",
+      "label": "Section height",
+      "default": "adapt",
+      "options": [
+        {
+          "label": "Adapt to image",
+          "value": "adapt"
+        },
+        {
+          "label": "Small",
+          "value": "small"
+        },
+        {
+          "label": "Medium",
+          "value": "medium"
+        },
+        {
+          "label": "Large",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "Show overlay",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Video settings"
+    },
+    {
+      "type": "select",
+      "id": "video_type",
+      "label": "Video type",
+      "default": "shopify",
+      "options": [
+        {
+          "value": "shopify",
+          "label": "Shopify hosted"
+        },
+        {
+          "value": "external",
+          "label": "External"
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "id": "shopify_video",
+      "label": "Shopify hosted"
+    },
+    {
+      "type": "video_url",
+      "id": "video_url",
+      "accept": [
+        "youtube",
+        "vimeo"
+      ],
+      "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+      "label": "External video url"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "checkbox",
+      "id": "content_in_container",
+      "label": "Content in container box",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Content position",
+      "default": "center middle",
+      "options": [
+        {
+          "label": "Top left",
+          "value": "left top"
+        },
+        {
+          "label": "Top center",
+          "value": "center top"
+        },
+        {
+          "label": "Top right",
+          "value": "right top"
+        },
+        {
+          "label": "Middle left",
+          "value": "left middle"
+        },
+        {
+          "label": "Middle center",
+          "value": "center middle"
+        },
+        {
+          "label": "Middle right",
+          "value": "right middle"
+        },
+        {
+          "label": "Bottom left",
+          "value": "left bottom"
+        },
+        {
+          "label": "Bottom center",
+          "value": "center bottom"
+        },
+        {
+          "label": "Bottom right",
+          "value": "right bottom"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Content alignment",
+      "default": "center",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_size",
+      "label": "Text size",
+      "default": "medium",
+      "options": [
+        {
+          "label": "Medium",
+          "value": "medium"
+        },
+        {
+          "label": "Large",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "label": "Text color",
+      "options": [
+        {
+          "label": "Dark",
+          "value": "dark"
+        },
+        {
+          "label": "Light",
+          "value": "white"
+        }
+      ],
+      "default": "white"
+    },
+    {
+      "type": "textarea",
+      "id": "title",
+      "label": "Heading",
+      "default": "Image with text overlay"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subheading",
+      "placeholder": "New Arrivals"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Use overlay text to give your customers insight into your brand. Select imagery and text that relates to your style and story.</p>"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "Button label",
+      "default": "Shop now"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "Button link"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "sf__btn-primary",
+          "label": "Primary button"
+        },
+        {
+          "value": "sf__btn-secondary",
+          "label": "Secondary button"
+        },
+        {
+          "value": "sf__btn-white",
+          "label": "White button"
+        },
+        {
+          "value": "sf__btn-link",
+          "label": "Underline button"
+        }
+      ],
+      "default": "sf__btn-primary"
+    },
+    {
+      "type": "select",
+      "id": "button_size",
+      "label": "Button size",
+      "options": [
+        {
+          "value": "sf__btn-small",
+          "label": "Button small"
+        },
+        {
+          "value": "",
+          "label": "Button medium"
+        },
+        {
+          "value": "sf__btn-large",
+          "label": "Button large"
+        }
+      ],
+      "default": ""
+    },
+    {
+      "type": "header",
+      "content": "Mobile settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "use_content_above",
+      "label": "Use content above image",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Advanced settings"
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom classes"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video hero",
+      "category": "Image"
+    }
+  ]
+}
+{% endschema %}

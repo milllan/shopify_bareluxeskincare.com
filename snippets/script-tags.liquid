@@ -1,0 +1,39 @@
+<script>
+  window.addEventListener("load", function() {
+    window.__sfWindowLoaded = true
+  })
+</script>
+
+<script>
+{%- if template.name == 'index' -%}
+  function __lightOrDark(color) {
+    var lightness = Number((color.match(/^hsl.*,(.*)%\)/) || ['', '100'])[1].trim());
+    return lightness > 50 ? 'light' : 'dark';
+  }
+  __detectBgSections = function () {
+    try {
+      var sections = document.querySelectorAll('[data-bg]')
+      for (var i = 0; i < sections.length; i++) {
+        var section = sections[i]
+        var lightness = __lightOrDark(section.dataset.bg)
+        section.classList.add('bg-' + lightness)
+      }
+    } catch (error) {
+      console.error("Failed to __detectBgSections.", error)
+    }
+  }
+  __detectBgSections();
+{%- endif -%}
+
+{%- if request.design_mode -%}
+window.addEventListener('shopify:section:load', function (e) {
+  {%- if template.name == 'index' -%}
+    __detectBgSections();
+  {%- endif -%}
+})
+{%- endif -%}
+
+// Fixed: Largest Contentful Paint image was lazily loaded
+const first_image = document.querySelector('#MainContent .shopify-section img');
+if (first_image) first_image.setAttribute('loading', 'auto');
+</script>

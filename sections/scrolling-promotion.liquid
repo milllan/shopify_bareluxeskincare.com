@@ -1,0 +1,252 @@
+{{ 'scrolling-promotion.css' | asset_url | stylesheet_tag }}
+<m-scrolling-promotion
+  class="sf-section-padding m-scrolling-promotion m-scrolling-promotion--{{ section.settings.direction }}"
+  style="--item-gap: {{ section.settings.item_gap }}px;--item-gap-mobile: {{ section.settings.item_gap_mobile }}px;--bg-color: {{ section.settings.bg_color }};--text-color: {{ section.settings.text_color }};--section-padding-top: {{ section.settings.padding_top }}px;--section-padding-bottom: {{ section.settings.padding_bottom }}px;--duration: {{ section.settings.speed }}s;"
+>
+  <div class="m-promotion">
+    {% for block in section.blocks %}
+      {%- case block.type -%}
+        {%- when 'image' -%}
+          <div class="m-promotion__item" style="--image-height: {{ block.settings.image_height }}px;">
+            {% if block.settings.image_link != blank %}<a href="{{ block.settings.image_link }}" class="m-promotion__item--link">{% endif %}
+            {% if block.settings.image != blank %}
+                {%- liquid 
+                    assign image = block.settings.image    
+                -%}
+                <img
+                    srcset="{%- if image.src.width >= 165 -%}{{ image.src | image_url: width: 165 }} 165w,{%- endif -%}
+                      {%- if image.src.width >= 360 -%}{{ image.src | image_url: width: 360 }} 360w,{%- endif -%}
+                      {%- if image.src.width >= 533 -%}{{ image.src | image_url: width: 533 }} 533w,{%- endif -%}
+                      {%- if image.src.width >= 720 -%}{{ image.src | image_url: width: 720 }} 720w,{%- endif -%}
+                      {%- if image.src.width >= 1000 -%}{{ image.src | image_url: width: 1000 }} 1000w,{%- endif -%}
+                      {%- if image.src.width >= 1500 -%}{{ image.src | image_url: width: 1500 }} 1500w,{%- endif -%}
+                      {{ image.src | image_url }} {{ image.src.width }}w"
+                    src="{{ image.src | image_url: width: 533 }}"
+                    sizes="(min-width: {{ settings.container_width }}px) {{ settings.container_width | minus: 130 | divided_by: 4 }}px, (min-width: 990px) calc((100vw - 130px) / 4), (min-width: 750px) calc((100vw - 120px) / 3), calc((100vw - 35px) / 2)"
+                    alt="{{ image.src.alt | escape }}"
+                    loading="lazy"
+                    width="{{ image.width }}"
+                    height="{{ image.height }}"
+                  >
+            {% else %}
+              <svg class="placeholder-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 158.3 158.3">
+                <path d="M50.7 83.8H43v-17c0-.3-.3-.6-.6-.6h-2.8c-.3 0-.6.3-.6.6v20.1c0 .3.2.6.6.6h11.1c.3 0 .6-.3.6-.6v-2.5c-.1-.4-.3-.6-.6-.6zm12.7-17.9c-6.1 0-10.9 4.9-10.9 10.9 0 6.1 4.8 10.9 10.9 10.9 6.1 0 10.9-4.8 10.9-10.9 0-6-4.8-10.9-10.9-10.9zm0 17.9c-3.8 0-6.9-3.1-6.9-6.9 0-3.8 3.1-7 6.9-7s7 3.2 7 7c0 3.7-3.2 6.9-7 6.9zm31.7-6.9h-5.8c-.3 0-.6.2-.6.6v2.4c0 .3.2.5.6.5h2.4V83c-.6.2-1.9.8-3.6.8-3.8 0-6.8-3.2-6.8-6.9 0-3.8 3-7 6.8-7 1.7 0 3.3.6 4.6 1.8.3.2.5.2.8 0l1.9-2c.2-.2.2-.6 0-.8-2.1-1.8-4.7-2.8-7.4-2.8-6 0-10.9 4.9-10.9 10.9 0 6.1 4.8 10.8 10.9 10.8 4.4 0 7.5-2 7.5-2 .1-.1.2-.2.2-.5v-7.8c-.1-.3-.3-.6-.6-.6zm14.5-11c-6.1 0-10.9 4.9-10.9 10.9 0 6.1 4.8 10.9 10.9 10.9 6.1 0 10.9-4.8 10.9-10.9 0-6-4.8-10.9-10.9-10.9zm0 17.9c-3.8 0-6.9-3.1-6.9-6.9 0-3.8 3.1-7 6.9-7s7 3.2 7 7c0 3.7-3.2 6.9-7 6.9z"></path>
+              </svg>
+            {% endif %}
+            {% if block.settings.image_link != blank %}</a>{% endif %}
+          </div>
+        {%- else -%}
+          <div class="m-promotion__item">
+            {% if block.settings.text_link != blank %}<a href="{{ block.settings.text_link }}" class="m-promotion__item--link">{% endif %}
+            {% if block.settings.custom_svg != blank %}
+                <span class="m-promotion__icon m-promotion__icon--{{ block.settings.icon_size }}">{{ block.settings.custom_svg }}</span>
+            {% endif %}
+            {% if block.settings.text != blank %}
+            <div class="m-promotion__text" style="--text-size: {{ block.settings.text_size }}px;">
+                {{ block.settings.text }}
+            </div>
+            {% if block.settings.text_link != blank %}</a>{% endif %}
+        {% endif %}
+        </div>
+      {%- endcase -%}
+    {% endfor %}
+  </div>
+</m-scrolling-promotion>
+
+{% schema %}
+{
+  "name": "Scrolling promotion",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Settings"
+    },
+    {
+      "type": "select",
+      "id": "direction",
+      "label": "Direction",
+      "options": [
+        {
+          "label": "Left",
+          "value": "left"
+        },
+        {
+          "label": "Right",
+          "value": "right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "speed",
+      "label": "Speed",
+      "min": 2,
+      "max": 60,
+      "unit": "s",
+      "step": 1,
+      "default": 30
+    },
+    {
+      "type": "range",
+      "id": "item_gap",
+      "label": "Item gap",
+      "default": 50,
+      "min": 0,
+      "max": 200,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "item_gap_mobile",
+      "label": "Item gap mobile",
+      "default": 30,
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#222222"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "default": 36,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "default": 36,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "range",
+          "id": "image_height",
+          "label": "Image height",
+          "default": 120,
+          "min": 0,
+          "max": 200,
+          "step": 2,
+          "unit": "px"
+        },
+        {
+          "type": "url",
+          "id": "image_link",
+          "label": "Image link"
+        }
+      ]
+    },
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "textarea",
+          "id": "custom_svg",
+          "label": "Custom SVG icon"
+        },
+        {
+          "type": "select",
+          "id": "icon_size",
+          "label": "Icon size",
+          "default": "medium",
+          "options": [
+            {
+              "label": "Small",
+              "value": "small"
+            },
+            {
+              "label": "Medium",
+              "value": "medium"
+            },
+            {
+              "label": "Large",
+              "value": "large"
+            }
+          ]
+        },
+        {
+          "type": "textarea",
+          "label": "Text",
+          "id": "text",
+          "default": "Welcome to our store"
+        },
+        {
+          "type": "range",
+          "id": "text_size",
+          "label": "Text size",
+          "min": 12,
+          "max": 150,
+          "unit": "px",
+          "default": 30,
+          "step": 2
+        },
+        {
+          "type": "url",
+          "id": "text_link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scrolling promotion",
+      "category": "Promotional",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        },
+        {
+          "type": "image"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

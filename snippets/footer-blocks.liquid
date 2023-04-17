@@ -1,0 +1,142 @@
+{% if blocks.size > 0 %}
+    <div class="{% if bordered %} lg:border-b lg:border-color-border{% endif %} sf__footer-middle">
+        <div class="{{ container }}{% if container == 'w-full' %} px-4{% endif %}">
+            <div class="sf-footer__accordion flex flex-wrap lg:flex-nowrap -mx-4 {% if bordered %}lg:-mx-8{% else %}lg:-mx-5{% endif %}">
+                {% for block in blocks %}
+                    {% liquid
+                      case block.settings.width
+                        when '16%'
+                            assign block_width = 'lg:w-1/6'
+                        when '20%'
+                            assign block_width = 'lg:w-1/5'
+                        when '25%'
+                            assign block_width = 'lg:w-1/4'
+                        when '33%'
+                            assign block_width = 'lg:w-1/3'
+                        when '50%'
+                            assign block_width = 'lg:w-1/2'
+                        when '66%'
+                            assign block_width = 'lg:w-2/3'
+                        when '75%'
+                            assign block_width = 'lg:w-3/4'
+                        when '83%'
+                            assign block_width = 'lg:w-10/12'
+                        when '100%'
+                            assign block_width = 'lg:w-full'
+                      endcase
+
+                      assign block_title = block.settings.title
+                      if block.type == 'menu' and block_title == blank
+                          assign block_title = linklists[block.settings.menu].title
+                      endif
+                    %}
+                    
+                    <div class="sf-footer__block {% if block_title != blank %} sf__accordion-item {% if block.settings.open_default %} open{% endif %} {% endif %} sf__footer-block-{{ block.type }} w-full {{ block_width }}{% if bordered and forloop.last != true %} lg:border-r lg:border-color-border{% endif %} {% if block.settings.order_first %} order-first md:order-none{% endif %}">
+                        <div class="sf-footer__block-inner px-4 {% if bordered %}lg:px-8{% else %}lg:px-5{% endif %}">
+                            {% if block_title != blank %}
+                                <h3 class="font-medium mb-4 text-base sf__accordion-button sf__footer-block-title">{{ block_title }}</h3>
+                            {% endif %}
+                            {% case block.type %}
+                                {% when 'menu' %}
+                                    {% render 'footer-block__menu', block: block, block_title: block_title %}
+                                {% when 'our_store' %}
+                                    <div class="{% if block.settings.title != blank %}sf__accordion-content{% endif %} rte sf__footer-block-content">
+                                        <div class="pb-5 md:pb-0">
+                                            {% unless block.settings.description == blank %}
+                                              <div class="mt-0 md:mt-4 block-text">
+                                                {{ block.settings.description }}
+                                              </div>
+                                            {% endunless %}
+                                            <div class="block-text mt-4">
+                                                {% if settings.contact_phone_number and block.settings.show_phone %}
+                                                <p>
+                                                    <a href="tel:{{ settings.contact_phone_number }}" class="hover:text-black">
+                                                        {{ settings.contact_phone_number }}
+                                                    </a>
+                                                </p>
+                                                {% endif %}
+                                                {% if settings.contact_email and block.settings.show_email %}
+                                                    <p class="mt-1">
+                                                        <a href="mailto:{{ settings.contact_email }}" class="hover:text-black">
+                                                            {{ settings.contact_email }}
+                                                        </a>
+                                                    </p>
+                                                {% endif %}
+                                                {% if block.settings.show_socials_link %}
+                                                    {% render 'social-media-links', box_size: 'mt-6 px-0 -mx-2', size: 'w-[20px] h-[20px]' %}
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% when 'newsletter' %}
+                                    <div class="{% if block.settings.title != blank %}sf__accordion-content{% endif %} rte sf__footer-block-content">
+                                        <div class="pb-5 md:pb-0">
+                                            <p class="py-2 block-text sf__newsletter-block-desc">{{ block.settings.description }}</p>
+
+                                            <div>
+                                                {%- liquid
+                                                  assign form_classes = 'sf__footer-form-newsletter form__style-' | append: block.settings.form_style
+                                                -%}
+                                                {% form 'customer', id: 'contact-form__{{ "now" | date: "%L" }}', class: form_classes %}
+                                                    <input type="hidden" name="contact[tags]" value="newsletter">
+                                                    <div class="relative">
+                                                        <input
+                                                            type="email"
+                                                            required
+                                                            name="contact[email]"
+                                                            placeholder="{{ block.settings.email_placeholder }}"
+                                                            autocorrect="off"
+                                                            autocapitalize="off"
+                                                            autocomplete="off"
+                                                            spellcheck="false"
+                                                            class="form-control form__control-icon py-1.5 px-12 sf__newletter__form-input"
+                                                        >
+                                                        {% unless block.settings.form_style == 'minimal' %}
+                                                        <span class="sf__footer-form-newsletter-icon absolute">
+                                                            <svg class="w-[16px] h-[16px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M464 64H48C21.49 64 0 85.49 0 112v288c0 26.51 21.49 48 48 48h416c26.51 0 48-21.49 48-48V112c0-26.51-21.49-48-48-48zm0 48v40.805c-22.422 18.259-58.168 46.651-134.587 106.49-16.841 13.247-50.201 45.072-73.413 44.701-23.208.375-56.579-31.459-73.413-44.701C106.18 199.465 70.425 171.067 48 152.805V112h416zM48 400V214.398c22.914 18.251 55.409 43.862 104.938 82.646 21.857 17.205 60.134 55.186 103.062 54.955 42.717.231 80.509-37.199 103.053-54.947 49.528-38.783 82.032-64.401 104.947-82.653V400H48z"/></svg>
+                                                        </span>
+                                                        {% endunless %}
+                                                        <button type="submit" name="commit" class="sf__form-submit absolute">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 17"><path fill="currentColor" d="M7.66406.585938c.21094-.1875.41016-.1875.59766 0L15.6094 7.96875c.2109.1875.2109.375 0 .5625L8.26172 15.9141c-.1875.1875-.38672.1875-.59766 0l-.70312-.7032c-.07032-.0703-.10547-.164-.10547-.2812s.03515-.2227.10547-.3164l5.44926-5.44924H.421875C.140625 9.16406 0 9.02344 0 8.74219v-.98438c0-.28125.140625-.42187.421875-.42187H12.4102L6.96094 1.88672c-.1875-.21094-.1875-.41016 0-.59766l.70312-.703122z"/></svg>
+                                                        </button>
+                                                    </div>
+
+                                                    {% if settings.agree_text != blank and block.settings.show_agree_checkbox %}
+                                                        <div class="agree-terms">
+                                                            <label>
+                                                            <input type="checkbox" name="agree_terms" value="yes" required>
+                                                            <span>{{ settings.agree_text }}</span>
+                                                            </label>
+                                                        </div>
+                                                    {% endif %}
+
+                                                    {% render 'form__error', form: form %}
+
+                                                    {%- capture success_message -%}
+                                                        {{ 'general.newsletter_form.confirmation' | t }}
+                                                    {%- endcapture -%}
+                                                    {% render 'form__success', form: form, success_message: success_message %}
+                                                {% endform %}
+                                            </div>
+
+                                            {% if block.settings.show_social %}
+                                            <div class="block -mx-4 mt-4">
+                                                {% render 'social-media-links' %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% when 'custom_text' %}
+                                    {% render 'footer-block__text', block: block %}
+                                {% when 'custom_html' %}
+                                    {% render 'footer-block__html', block: block %}
+                                {% else %}
+                            {% endcase %}
+                        </div>
+                    </div>
+                    
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endif %}

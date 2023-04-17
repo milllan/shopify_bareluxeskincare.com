@@ -1,0 +1,42 @@
+{% liquid
+  if settings.wishlist_page != blank
+    assign url = pages[settings.wishlist_page].url
+  else
+    assign url = '/pages/wishlist'
+  endif
+
+  assign wishlist_app = settings.wishlist_app
+%}
+
+{% if wishlist_app == 'growave' %}
+  {% if shop.customer_accounts_enabled %}
+    {% liquid
+      assign ssw_fave_enabled = 1
+      if shop.metafields.ssw['fave_enabled']
+        assign ssw_fave_enabled = shop.metafields.ssw['fave_enabled'] | plus: 0
+      endif
+    %}
+    {% if ssw_fave_enabled == 1 %}
+      <a class="ssw-link-fave-menu ssw-link-fave-menu-hide-count relative px-2 py-3.5" href="{{ url }}" aria-label="{{ shop.metafields.ssw.lang.my_faves }}">
+              <span class="sf__tooltip-item block sf__tooltip-bottom sf__tooltip-style-2">
+                <svg class="w-[20px] h-[20px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.1 171.5L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6zM388.6 312.3l23.7 138.4L288 385.4l-124.3 65.3 23.7-138.4-100.6-98 139-20.2 62.2-126 62.2 126 139 20.2-100.6 98z"/></svg>
+                <span class="sf__tooltip-content">{{ 'layout.wishlist.title' | t }}</span>
+              </span>
+        <span class="ssw-counter-fave-menu sf-wishlist-count" style="display:none">0</span>
+      </a>
+      <script defer>var sswFaveCounterMenuLoaded=true;</script>
+    {% endif %}
+  {% endif %}
+{% else %}
+  <a href="{{ url }}" class="{{ box_size | default: 'relative px-2 py-3.5' }}">
+    {% if display_by == 'icon' %}
+      <span class="sf__tooltip-item block sf__tooltip-bottom sf__tooltip-style-2">
+          <svg class="w-[20px] h-[20px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M528.1 171.5L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6zM388.6 312.3l23.7 138.4L288 385.4l-124.3 65.3 23.7-138.4-100.6-98 139-20.2 62.2-126 62.2 126 139 20.2-100.6 98z"/></svg>
+          <span class="sf__tooltip-content">{{ 'layout.wishlist.title' | t }}</span>
+      </span>
+    {% else %}
+      {{ 'layout.wishlist.title' | t }}
+    {% endif %}
+    <sup class="sf-wishlist-count font-medium"></sup>
+  </a>
+{% endif %}

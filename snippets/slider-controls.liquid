@@ -1,0 +1,40 @@
+{% liquid
+  if show_pagination == nil
+    assign show_pagination = true
+  endif
+
+  if container == 'w-full' and pagination_type != "fraction"
+    assign show_nav = false
+  endif
+
+  assign pagination_type = pagination_type | default: "bullets"
+%}
+<div class="sf-slider__controls flex items-center justify-center mt-5 md:mt-0 -mx-2{% if show_nav %} sf-slider__controls--show-nav{% endif %}{% if show_pagination %} sf-slider__controls--show-pagination{% endif %}{% if absolute == true %} sf-slider__controls--absolute{% endif %}{% if container == 'w-full' %} sf-slider__controls--full{% endif %} {{ custom_class }}"{% if show_pagination %} style="--nav-offset: 25px"{% endif %}>
+    {% if show_nav %}
+    <button class="sf-slider__controls-button swiper-button-prev sf-slider__controls-prev border sm:hover:border-black rounded-full cursor-pointer mx-2 {{ nav_class }}">
+      {% if pagination_type == "fraction" %}
+        <svg width="9" height="12" viewBox="0 0 7 10" fill="none">
+          <path d="M5.5 9.00342L1.5 5.00342L5.5 1.00342" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      {% else %}
+        <svg width="14px" height="14px" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+          <path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/>
+        </svg>
+      {% endif %}
+    </button>
+    {% endif %}
+    {% if show_pagination %}
+        <div class="swiper-pagination w-full{% if offset_top %} {{offset_top}}{% else %} sm:mt-6{% endif %} {{ dots_class }}"></div>
+    {% endif %}
+    {% if show_nav %}
+    <button class="sf-slider__controls-button swiper-button-next sf-slider__controls-next border sm:hover:border-black rounded-full cursor-pointer mx-2 {{ nav_class }}">
+      {% if pagination_type == "fraction" %}
+        <svg width="9" height="12" viewBox="0 0 7 10" fill="none">
+          <path d="M1.5 9.00342L5.5 5.00342L1.5 1.00342" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      {% else %}
+        <svg fill="currentColor" width="14px" height="14px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/></svg>
+      {% endif %}
+    </button>
+    {% endif %}
+</div>

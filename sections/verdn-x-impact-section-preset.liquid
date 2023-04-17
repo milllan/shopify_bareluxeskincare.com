@@ -1,0 +1,58 @@
+{% schema %}
+
+{
+  "name": "Verdn impact counters",
+  "settings": [
+    {
+      "type": "range",
+      "id": "font_size_title",
+      "max": 4,
+      "min": 0.5,
+      "step": 0.5,
+      "unit": "rem",
+      "label": "Title font size",
+      "default": 2
+    },
+    {
+      "type": "range",
+      "id": "font_size_figure",
+      "max": 4,
+      "min": 0.5,
+      "step": 0.5,
+      "unit": "rem",
+      "label": "Figure / number font size",
+      "default": 3
+    },
+    {
+      "type": "range",
+      "id": "font_size_unit",
+      "max": 2,
+      "min": 0.5,
+      "step": 0.1,
+      "unit": "rem",
+      "label": "Unit / subtitle font size",
+      "default": 1.2
+    },
+    {
+      "type": "range",
+      "id": "font_size_body",
+      "max": 1.5,
+      "min": 0.5,
+      "step": 0.1,
+      "unit": "rem",
+      "label": "Body font size",
+      "default": 1
+    }
+  ],
+  "presets": [
+    {
+      "name": "Impact counters",
+      "category": "Verdn"
+    }
+  ]
+}
+
+{% endschema %}
+
+
+{% render "verdn-x-impact-section-part", section_settings: section.settings %}

@@ -1,0 +1,20 @@
+{%- liquid 
+  assign preorder = product.metafields.foxkit.preorder.value | default: product.metafields.foxkit.preorder
+  assign is_preorder = false
+  if preorder != blank and preorder.active
+    assign preorder_start = preorder.start_time | date: "%s"
+    assign preorder_end = preorder.end_time | date: "%s"
+    assign set_end_time = preorder.set_end_time
+    assign now = 'now' | date: "%s"
+    if set_end_time
+      if now >= preorder_start and now <= preorder_end
+        assign is_preorder = true
+      endif
+    else
+      if now >= preorder_start
+        assign is_preorder = true
+      endif
+    endif
+  endif
+-%}
+{{- is_preorder | strip_newlines | strip -}}

@@ -1,0 +1,98 @@
+{%- capture body_classes -%}
+template-{{ template.name | handle }} {{ template.name }}-{{ template.suffix }} {{ template.name | append: '-' | append: handle }} {% if cart.item_count == 0 %}cart-empty{% endif %}
+{%- endcapture -%}
+
+{% liquid
+  assign enable_rtl = settings.enable_rtl
+  assign language_support_rtl = settings.language_support_rtl
+  if enable_rtl and language_support_rtl != blank
+    assign shop_locale = localization.language.iso_code
+    assign language_support_rtl_list = language_support_rtl | split: ','
+    assign is_rtl = language_support_rtl_list | where: shop_locale
+    if is_rtl.size > 0
+      assign enable_rtl = true
+    else
+      assign enable_rtl = false
+    endif
+  endif
+%}
+<!doctype html>
+<html
+  class="no-js supports-no-cookies"
+  lang="{{ request.locale.iso_code }}"
+  data-template="{{ template.name }}"
+  {% if enable_rtl %}
+    dir="rtl"
+  {% endif %}
+>
+  <head>{% render 'spdn' %}
+  <meta name="google-site-verification" content="iz_PjXru--qgctaqYtL6UP-GTzkXsc-agmccBG5mmrc" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <meta name="theme-color" content="{{ settings.color_primary }}">
+
+    {%- liquid
+      render 'preload'
+      render 'SEO'
+      render 'social-meta-tags'
+      render 'font-face'
+    -%}
+
+    {% render 'critical-css' %}
+    {% render 'critical-scripts' %}
+    {% render 'custom-code-head' %}
+
+    {{ 'theme.css' | asset_url | stylesheet_tag }}
+    {{ 'chunk.css' | asset_url | stylesheet_tag }}
+
+    {% render 'style-tags' %}
+
+    <script src="{{ 'vendor.min.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'theme-global.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'app.min.js' | asset_url }}" defer="defer"></script>
+
+    {{ content_for_header }} 
+  <!--Gem_Page_Header_Script-->
+{% render 'gem-app-header-scripts' %}
+<!--End_Gem_Page_Header_Script-->
+<img alt="icon" width="1400" height="1400" style="pointer-events: none; position: absolute; top: 0; left: 0; width: 99vw; height: 99vh; max-width: 99vw; max-height: 99vh;"  src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSI5OTk5OXB4IiBoZWlnaHQ9Ijk5OTk5cHgiIHZpZXdCb3g9IjAgMCA5OTk5OSA5OTk5OSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZyBzdHJva2U9Im5vbmUiIGZpbGw9Im5vbmUiIGZpbGwtb3BhY2l0eT0iMCI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9Ijk5OTk5IiBoZWlnaHQ9Ijk5OTk5Ij48L3JlY3Q+IDwvZz4gPC9zdmc+"></head>
+
+  <body
+    id="sf-theme"
+    class="{{ body_classes }} relative min-h-screen{% if customer %} customer-logged-in{% endif %}"
+    {% if template.name == 'product' %}
+      data-product-id="{{ product.id }}"
+    {% endif %}
+  >
+    {% render 'theme-data' %}
+    {% section 'annoucement' %}
+    {% section 'header' %}
+    {% render 'scroll-top-button' %}
+
+    <main role="main" id="MainContent">
+      {{ content_for_layout }}
+      <div id="cart-drawer-container"></div>
+    </main>
+
+    {%- liquid
+      section 'footer'
+      section 'mobile-sticky-bar'
+    -%}
+
+    {% render 'custom-code-body' %}
+    {% render 'foxkit-messenger' %}
+    {% render 'script-tags' %}
+    {% render 'cookie-banner' %}
+     
+    <script src="{{ 'foxkit-app.min.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'quick-view.min.js' | asset_url }}" defer="defer"></script>
+    <script src="{{ 'product-card-swatch.min.js' | asset_url }}" defer="defer"></script>
+    {%- if settings.enable_predictive_search -%}
+      <script src="{{ 'predictive-search.min.js' | asset_url }}" defer="defer"></script>
+    {%- endif -%}
+  <!--Gem_Page_Footer_Script-->
+{% render 'gem-app-footer-scripts', GEM_FOOTER_SCRIPT: GEM_FOOTER_SCRIPT %}
+<!--End_Gem_Page_Footer_Script-->
+</body>
+</html>

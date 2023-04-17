@@ -1,0 +1,115 @@
+{% assign show_account_icon = header_settings.show_account_icon %}
+{% assign show_wishlist_icon = header_settings.show_wishlist_icon %}
+{% assign show_compare_icon = header_settings.show_compare_icon %}
+{% assign show_cart_icon = header_settings.show_cart_icon %}
+
+<div
+  style="--tw-bg-opacity: 0.6;"
+  data-search-popup
+  class="overscroll-contain fixed z-[100] overflow-x-hidden h-full overflow-y-scroll inset-0 transition-opacity duration-300 opacity-0 invisible bg-black"
+>
+  <div class="search-container py-4 md:py-8 bg-white relative z-10 min-h-full md:min-h-0 transition-transform duration-300 transform md:-translate-y-1/2" data-search-container>
+    {%- if settings.enable_predictive_search -%}
+      <predictive-search
+        data-search-by-tag="{{ settings.search_by_tag }}"
+        data-search-by-body="{{ settings.search_by_body }}"
+        data-unavailable-products-option="{{ settings.search_unavailable_products | downcase }}"
+      >
+    {%- endif -%}
+      <div class="container-fluid m-search-wrapper">
+          <div class="flex justify-between items-center md:hidden mb-2">
+            <h3 class="text-base font-medium">{{ 'general.search.title' | t }}</h3>
+            <button data-close-search class="text-black p-2">
+              <svg class="w-[20px] h-[20px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"/>
+              </svg>
+            </button>
+          </div>
+          <div class="flex">
+            {% render 'header-logo', header_settings: header_settings, box_size: 'w-1/6', is_in_search: true %}
+            <div class="w-full md:w-2/3 flex justify-center items-center">
+              <form id="m-form-search" action="{{ routes.search_url }}" method="GET" role="search" novalidate class="m-search-form relative w-full md:mx-28 flex border border-black rounded-md">
+                  <input type="hidden" name="options[unavailable_products]" value="last">
+                  <input type="hidden" name="options[prefix]" value="last">
+                  <input type="hidden" name="options[fields]" value="title,vendor,product_type,variants.title">
+
+                  <input
+                    type="search" name="q" required autocomplete="off"
+                    placeholder="{{ 'general.search.placeholder' | t }}"
+                    aria-label="{{ 'general.search.placeholder' | t }}"
+                    class="w-full h-11" style="border: none;"
+                    data-search-input
+                  />
+                  <button type="submit" class="absolute top-px right-0 py-3 px-3.5">
+                    <svg class="w-[18px] h-[18px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                      <path d="M508.5 468.9L387.1 347.5c-2.3-2.3-5.3-3.5-8.5-3.5h-13.2c31.5-36.5 50.6-84 50.6-136C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c52 0 99.5-19.1 136-50.6v13.2c0 3.2 1.3 6.2 3.5 8.5l121.4 121.4c4.7 4.7 12.3 4.7 17 0l22.6-22.6c4.7-4.7 4.7-12.3 0-17zM208 368c-88.4 0-160-71.6-160-160S119.6 48 208 48s160 71.6 160 160-71.6 160-160 160z"/>
+                    </svg>
+                  </button>
+                  <span class="invisible absolute top-0 right-0 py-2.5 px-3" data-spinner>
+                    <svg class="animate-spin animate-spin-show w-[24px] h-[24px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </span>
+                  <span
+                    class="absolute top-0 p-3.5 invisible cursor-pointer text-[#777] right-8"
+                    data-clear-search
+                  >
+                    <svg class="w-[16px] h-[16px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                      <path d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"/>
+                    </svg>
+                  </span>
+              </form>
+            </div>
+            <div class="w-1/6 hidden md:flex justify-end items-center">
+              {% liquid
+                if show_account_icon
+                  render 'header-option-item__account', display_by: 'icon', box_size: 'mx-2'
+                endif
+
+                if show_wishlist_icon
+                    render 'header-option-item__wishlist', display_by: 'icon', box_size: 'relative mx-2'
+                endif
+
+                if show_compare_icon
+                  render 'header-option-item__compare', display_by: 'icon', box_size: 'relative mx-2'
+                endif
+
+                if show_cart_icon
+                    render 'cart'
+                endif
+              %}
+            </div>
+          </div>
+          <div class="flex md:justify-center mt-3 flex-wrap" data-popular-searches>
+              <span class="text-[#666] mr-4">{{ 'general.search.popular_searches' | t }}:</span>
+              <div class="flex items-center flex-wrap">
+                {%- assign popular_queries = settings.popular_search_queries | split: ',' -%}
+                {% for qr in popular_queries %}
+                  <a
+                      class="cursor-pointer underline mr-4 hover:text-gray-800 whitespace-nowrap"
+                      data-ps-query="{{ qr | strip }}"
+                      data-ps-item
+                  >
+                    {{ qr | strip }}
+                  </a>
+                {% endfor %}
+              </div>
+          </div>
+          <div class="text-2xl text-[#999] mt-4 md:mt-9 mb-2 md:mb-7 text-center hidden" data-search-count>
+            <span
+              data-message
+              data-results-title="{{ 'general.search.results_for' | t | capitalize }}"
+              data-no-results="{{ 'general.search.no_results' | t }}"
+            ></span>
+            "<span class="text-black" data-query></span>"
+          </div>
+          {%- if settings.enable_predictive_search -%}
+            <div tabindex="-1" data-predictive-search></div>
+          {%- endif -%}
+      </div>
+      {%- if settings.enable_predictive_search -%}
+      </predictive-search>
+      {%- endif -%}
+  </div>
+</div>

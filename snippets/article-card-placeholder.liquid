@@ -1,0 +1,39 @@
+{% liquid
+  if content_align == nil
+    assign content_align = settings.article_align_content
+  endif
+  if article_show_date == nil
+    assign article_show_date = settings.article_show_date
+  endif
+  if article_show_tags == nil
+    assign article_show_tags = settings.article_show_tags
+  endif
+  if article_show_excerpt == nil
+    assign article_show_excerpt = settings.article_show_excerpt
+  endif
+  if article_show_button == nil
+    assign article_show_button = settings.article_show_button
+  endif
+%}
+<div class="sf__blog-card sf__view-{{ view }} {{ blog_class }}">
+  <div class="sf__blog-cardImage" {% if settings.article_image_aspect_ratio != 'original' %}style="--aspect-ratio: {{ settings.article_image_aspect_ratio }}"{% endif %}>
+    {{ 'image' | placeholder_svg_tag: 'placeholder-svg' }}
+  </div>
+  <div class="sf__blog-cardContent {{ content_align }}">
+    {%- if article_show_tags -%}
+        <span class="sf__blog-cardTags">{{ 'homepage.onboarding.blog_tag' | t }}</span>
+    {%- endif -%}
+    {%- if article_show_date -%}
+        <span class="sf__blog-cardDate">{{ "now" | time_tag: format: 'date' }}</span>
+    {%- endif -%}
+    <h3 class="sf__blog-cardTitle">{{ 'homepage.onboarding.blog_title' | t }}</h3>
+    {%- if article_show_excerpt -%}
+        <div class="sf__blog-cardExcerpt hidden md:block">
+            {{ 'homepage.onboarding.blog_excerpt' | t }}
+        </div>
+    {%- endif -%}
+    {%- if article_show_button -%}
+        <a class="sf__blog-cardReadmore sf__btn sf__btn-link" href="#">{{ 'blogs.article.read_more' | t }}</a>
+    {%- endif -%}
+  </div>
+</div>

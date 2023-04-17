@@ -1,0 +1,116 @@
+<div class="sf-customer-section touch-none overscroll-contain fixed inset-0 transition-transform duration-300 left-full w-full z-[70]">
+    <div class="sf-customer-section__inner overscroll-contain w-full h-full bg-white p-4 relative">
+        <button class="absolute top-4 right-4 close-btn" area-label="{{ 'general.accessibility.close_header' }}">
+            <svg class="w-[24px] h-[24px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"/>
+            </svg>
+        </button>
+        <div class="mt-8 customer-tabs sf-customer__forms">
+            <div class="py-2 tab-header">
+                <label class="singin sf-user-tab-label">
+                    <input type="radio" name="customer-tab" data-tab="signin" class="hidden signin" checked="true">
+                    <span class="sf-customer__tab-login">{{ 'layout.customer.log_in' | t }}</span>
+                    <span class="sf-customer__tab-reset hidden">{{ 'customer.recover_password.title' | t }}</span>
+                    <hr />
+                </label>
+                <label class="register sf-user-tab-label">
+                    <input type="radio" name="customer-tab" data-tab="register" class="hidden register">
+                    <span>{{ 'customer.register.title' | t }}</span>
+                    <hr />
+                </label>
+            </div>
+            <div class="w-full mt-6 tab-content signin">
+                <div class="sf-customer__login">
+                    <div data-login-form class="flex flex-col-reverse">
+                        {% form 'customer_login' %}
+                        {%- comment -%}
+                        {% if form.posted_successfully? %}
+                        <div class="notification show success mb-3 text-base">
+                            {{ 'customer.recover_password.success' | t }}
+                        </div>
+                        {% endif %}
+                        {%- endcomment -%}
+                        {% render 'form__error', form: form %}
+                    
+                        <input type="email" name="customer[email]" placeholder="{{ 'customer.login.email' | t }}" class="form-control" />
+                        <input type="password" name="customer[password]" placeholder="{{ 'customer.login.password' | t }}" class="form-control" />
+                    
+                        <a class="underline block my-3 sf-customer__reset-password-btn">{{ 'customer.login.forgot_password' | t }}</a>
+                        <button class="sf__btn sf__btn-primary mt-4  mb-3 w-full" type="submit">
+                            {{ 'customer.login.sign_in' | t }}
+                        </button>
+                        {% endform %}
+                    </div>
+                </div>
+                <div class="sf-customer__reset-password hidden">
+                    <p class="mt-4 mb-2 text-color-secondary">{{ 'customer.recover_password.subtext' | t }}</p>
+                    <div data-recover-form>
+                        {% form 'recover_customer_password' %}
+                        {% if form.posted_successfully? %}
+                            <div class="notification show success mt-5 mb-2 text-base sf-customer__recover-form-posted">
+                                {{ 'customer.recover_password.success' | t }}
+                            </div>
+                        {% endif %}
+                        {% render 'form__error', form: form %}
+                    
+                        <input class="form-control" type="email" name="email"
+                            placeholder="{{ 'customer.recover_password.email' | t }}" spellcheck="false" autocomplete="off"
+                            autocapitalize="off" />
+                    
+                        <div class="flex mt-2">
+                            <button type="submit" class="sf__btn sf__btn-primary block w-40">
+                                {{ 'customer.recover_password.submit' | t }}
+                            </button>
+                            <button type="button" data-recover-toggle
+                                class="sf__btn-secondary sf-customer__cancel-reset block w-40 ml-4">
+                                {{ 'customer.recover_password.cancel' | t }}
+                            </button>
+                        </div>
+                        {% endform %}
+                    </div>
+                </div>
+            </div>
+            <div class="w-full mt-6 tab-content register hidden">
+                <div data-register-form>
+                    {% form 'create_customer' %}
+                    {% render 'form__error', form: form %}
+                    {% render 'form__success', form: form, success_message: success_message %}
+                  
+                    <input type="text" name="customer[first_name]" placeholder="{{ 'customer.register.first_name' | t }}" class="form-control" />
+                    <input type="text" name="customer[last_name]" placeholder="{{ 'customer.register.last_name' | t }}" class="form-control" />
+                    <input type="email" name="customer[email]" placeholder="{{ 'customer.login.email' | t }}" class="form-control" />
+                    <input type="password" name="customer[password]" placeholder="{{ 'customer.login.password' | t }}" class="form-control" />
+                    <div class="mt-3 text-color-secondary">
+                      {{ 'customer.register.description' | t }}
+                    </div>
+                    {% assign show_terms = false %}
+                    {% if settings.agree_text != blank and settings.show_agree_on_register %}
+                      <div class="agree-terms">
+                        <label>
+                          <input type="checkbox" name="agree_terms" value="yes" required>
+                          <span>{{ settings.agree_text }}</span>
+                        </label>
+                      </div>
+                      {% assign show_terms = true %}
+                    {% endif %}
+                    <button class="mt-6 mb-3 w-full sf__btn sf__btn-primary"{% if show_terms %} data-terms-action disabled{% endif %}>
+                      {{ 'customer.register.title' | t }}
+                    </button>
+                    <a class="w-full mt-[12xpx] sf__btn sf__btn-secondary" href="{{ routes.account_login_url }}">
+                      {{ 'customer.login.title' | t }}
+                    </a>
+                    {% endform %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% style %}
+    .sf-customer-section .customer-tabs input:checked ~ hr {
+        display: block;
+    }
+    .sf-customer-section .customer-tabs input:checked ~ span {
+        color: black;
+    }
+{% endstyle %}

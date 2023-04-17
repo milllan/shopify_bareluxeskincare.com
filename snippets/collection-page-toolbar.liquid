@@ -1,0 +1,76 @@
+{%- assign st = section.settings -%}
+
+{%- liquid 
+  assign sort_by = results.sort_by | default: results.default_sort_by
+  for option in results.sort_options
+    if option.value == sort_by
+      assign sort_by_name = option.name | escape
+      break
+    endif
+  endfor
+-%}
+<div class="sf__collection-toolbar">
+  <div class="sf__toolbar-wrapper">
+    <div class="sf__toggle-filter flex {% unless st.sidebar == 'fixed' %}xl:hidden{% endunless %}">
+      {%- if st.show_filter -%}
+        <button class="sf__sidebar-open {% unless st.show_filter %}hidden{% else %}flex items-center font-medium mr-4 md:mr-8{% endunless %}">
+            <span class="mr-2">{{ 'collections.toolbar.show_filter' | t }}</span>
+            <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M441.9 167.3l-19.8-19.8c-4.7-4.7-12.3-4.7-17 0L224 328.2 42.9 147.5c-4.7-4.7-12.3-4.7-17 0L6.1 167.3c-4.7 4.7-4.7 12.3 0 17l209.4 209.4c4.7 4.7 12.3 4.7 17 0l209.4-209.4c4.7-4.7 4.7-12.3 0-17z"/></svg>
+        </button>
+      {%- endif -%}
+      {% if st.show_sorting %}
+        <button class="sf__sortmb-icon md:hidden flex items-center font-medium">
+          <span data-sortby-option>{{ sort_by_name }}</span>
+          <svg class="ml-2 w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M441.9 167.3l-19.8-19.8c-4.7-4.7-12.3-4.7-17 0L224 328.2 42.9 147.5c-4.7-4.7-12.3-4.7-17 0L6.1 167.3c-4.7 4.7-4.7 12.3 0 17l209.4 209.4c4.7 4.7 12.3 4.7 17 0l209.4-209.4c4.7-4.7 4.7-12.3 0-17z"/></svg>
+        </button>
+      {% endif %}
+    </div>
+    {%- if st.show_sorting or st.show_columns_switcher -%}
+      <div class="flex flex-1 items-center justify-between">
+        {% if st.show_sorting %}
+          <div class="font-medium hidden md:block" data-toolbar-sorting>
+            <div class="sf__custom-select">
+              {%- assign sort_by = results.sort_by | default: results.default_sort_by -%}
+              <select name="sort_by" aria-describedby="a11y-refresh-page-message">
+                {%- for option in results.sort_options -%}
+                  <option 
+                    value="{{ option.value | escape }}"
+                    {% if option.value == sort_by %} selected="selected"{% endif %}
+                    data-index="{{ forloop.index0 }}"
+                  >
+                    {{ option.name | escape }}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+          </div>
+        {% endif %}
+        {% if st.show_columns_switcher %}
+          <div class="flex-1"></div>
+          <div class="sf__gridColumn-view flex pl-4 md:pl-7">
+            <button class="flex sf__tooltip-item sf__tooltip-top" data-column="1">
+              <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12.5 9.5"><defs/><defs><style>.cls-1{fill-rule:evenodd}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><g id="shop_page" data-name="shop page"><g id="Group-16"><path id="Rectangle" d="M12.5.75a.76.76 0 01-.75.75h-11A.76.76 0 010 .75.76.76 0 01.75 0h11a.76.76 0 01.75.75z" class="cls-1"/><path id="Rectangle-2" d="M12.5 4.75a.76.76 0 01-.75.75h-11A.76.76 0 010 4.75.76.76 0 01.75 4h11a.76.76 0 01.75.75z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-3" d="M12.5 8.75a.76.76 0 01-.75.75h-11A.76.76 0 010 8.75.76.76 0 01.75 8h11a.76.76 0 01.75.75z" class="cls-1" data-name="Rectangle"/></g></g></g></g></svg>
+              <span class="sf__tooltip-content text-[12px]">{{ 'collections.toolbar.view_list' | t }}</span>
+            </button>
+            <button class="flex sf__tooltip-item sf__tooltip-top" data-column="2">
+              <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5.5 12.5"><defs/><defs><style>.cls-1{fill-rule:evenodd}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><g id="shop_page" data-name="shop page"><g id="Group-10"><path id="Rectangle" d="M.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 01.75 0z" class="cls-1"/><path id="Rectangle-2" d="M4.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 014.75 0z" class="cls-1" data-name="Rectangle"/></g></g></g></g></svg>
+              <span class="sf__tooltip-content text-[12px]">{{ 'collections.toolbar.grid_2cloumns' | t }}</span>
+            </button>
+            <button class="hidden md:flex sf__tooltip-item sf__tooltip-top" data-column="3">
+              <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9.5 12.5"><defs/><defs><style>.cls-1{fill-rule:evenodd}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><g id="shop_page" data-name="shop page"><g id="Group-16"><path id="Rectangle" d="M.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 01.75 0z" class="cls-1"/><path id="Rectangle-2" d="M4.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 014.75 0z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-3" d="M8.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 018.75 0z" class="cls-1" data-name="Rectangle"/></g></g></g></g></svg>
+              <span class="sf__tooltip-content text-[12px]">{{ 'collections.toolbar.grid_3cloumns' | t }}</span>
+            </button>
+            <button class="hidden md:flex sf__tooltip-item sf__tooltip-top" data-column="4">
+              <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 13.5 12.5"><defs/><defs><style>.cls-1{fill-rule:evenodd}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><g id="shop_page" data-name="shop page"><g id="_4_col" data-name="4_col"><path id="Rectangle" d="M.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 01.75 0z" class="cls-1"/><path id="Rectangle-2" d="M4.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 014.75 0z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-3" d="M8.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 018.75 0z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-4" d="M12.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11a.76.76 0 01.75-.75z" class="cls-1" data-name="Rectangle"/></g></g></g></g></svg>
+              <span class="sf__tooltip-content text-[12px]">{{ 'collections.toolbar.grid_4cloumns' | t }}</span>
+            </button>
+            <button class="hidden lg:flex sf__tooltip-item sf__tooltip-top" data-column="5">
+              <svg class="w-[12px] h-[12px]" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17.5 12.5"><defs/><defs><style>.cls-1{fill-rule:evenodd}</style></defs><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><g id="shop_page" data-name="shop page"><g id="_5_col" data-name="5_col"><path id="Rectangle" d="M.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 01.75 0z" class="cls-1"/><path id="Rectangle-2" d="M4.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 014.75 0z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-3" d="M8.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11A.76.76 0 018.75 0z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-4" d="M12.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11a.76.76 0 01.75-.75z" class="cls-1" data-name="Rectangle"/><path id="Rectangle-5" d="M16.75 0a.76.76 0 01.75.75v11a.76.76 0 01-.75.75.76.76 0 01-.75-.75v-11a.76.76 0 01.75-.75z" class="cls-1" data-name="Rectangle"/></g></g></g></g></svg>
+              <span class="sf__tooltip-content text-[12px]">{{ 'collections.toolbar.grid_5cloumns' | t }}</span>
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    {%- endif -%}
+  </div>
+</div>

@@ -1,0 +1,114 @@
+<script src="{{ 'recently-viewed-products.min.js' | asset_url }}" defer="defer"></script>
+
+{%- assign st = section.settings -%}
+<div
+  class="sf-product__section recently-viewed hidden"
+  data-section-type="recently-viewed"
+  data-section-id="{{ section.id }}"
+  data-products-to-show="{{ st.limit }}"
+  data-products-per-row="{{ st.columns }}"
+  data-enable-slider="{{ st.enable_slider }}"
+  {% if template == 'product' %}
+    data-product-handle="{{ product.handle }}"
+  {% endif %}
+  style="--column-gap: {{ st.column_gap }}px; --column-gap-mobile: 20px; --row-gap: {{ st.column_gap | plus: 10 }}px; --items: {{ st.columns }}"
+>
+  <div class="{{ section.settings.container }} section-my">
+    {% assign default_heading = 'products.product.recently_viewed_products' | t %}
+    <div class="section__header text-center">
+      <h2 class="section__heading">{{ st.heading | default: default_heading }}</h2>
+    </div>
+    <div class="relative">
+      {%- capture grid_class -%}
+        md:grid-cols-{{ st.columns | minus: 1 }} xl:grid-cols-{{ st.columns }}
+      {%- endcapture -%}
+      <div
+        class="sf-grid md:justify-center sf__ms-wrapper md:grid {{ grid_class | strip_newlines }}"
+        data-grid-container
+      >
+        <div class="swiper-wrapper" data-product-list></div>
+      </div>
+      {% if st.enable_slider %}
+        {% render 'slider-controls',
+          absolute: true,
+          show_nav: true,
+          container: st.container,
+          dots_class: 'flex sm:hidden',
+          custom_class: 'hidden'
+        %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Recently viewed products",
+  "settings": [
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Recently Viewed Products"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "Products to show",
+      "default": 8,
+      "min": 3,
+      "max": 20
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Products per row",
+      "default": 4,
+      "min": 3,
+      "max": 8
+    },
+    {
+      "type": "range",
+      "id": "column_gap",
+      "label": "Column gap",
+      "default": 30,
+      "min": 0,
+      "max": 50,
+      "step": 2
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_slider",
+      "label": "Enable slider",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Recently viewed products",
+      "settings": {
+      }
+    }
+  ]
+}
+{% endschema %}

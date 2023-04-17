@@ -1,0 +1,52 @@
+{% liquid
+  assign justify_css = justify | default: 'justify-center'
+  assign class = 'sf-logo sf-logo--mobile px-4 ' | append: box_size | append: ' ' | append: justify_css
+
+  assign aspect_ratio = header_settings.logo.aspect_ratio | default: 2.333
+  assign aspect_ratio_mobile = header_settings.logo_mobile.aspect_ratio | default: aspect_ratio
+  
+  if header_settings.logo
+    assign class = class | append: ' has-logo-img'
+  endif
+
+  assign is_svg = false
+  assign logo = header_settings.logo_mobile_svg
+
+  unless logo == blank
+    assign is_svg = true
+  else
+    assign logo = header_settings.logo_mobile
+    if logo == blank
+      assign logo = header_settings.logo_svg
+      assign is_svg = true
+    endif
+    if logo == blank
+      assign is_svg = false
+      assign logo = header_settings.logo
+    endif
+  endunless
+%}
+
+<div class="{{ class | strip_newlines }}">
+    {% if logo != blank %}
+      <a href="{{ routes.root_url }}" class="block py-2.5 logo-img relative" title="{{ shop.name }}">
+        {% if is_svg %}
+          <div class="sf-image sf-logo-mobile">
+            <img src="{{ logo }}" alt="{{ logo_alt }}" width="auto" height="auto" loading="lazy">
+          </div>
+        {% else %}
+          <div class="sf-image sf-logo-mobile" style="--aspect-ratio: {{ aspect_ratio }};--aspect-ratio-mobile: {{ aspect_ratio_mobile }}">
+            {% liquid
+              assign logo_alt = logo.alt | default: shop.name | escape
+              assign logo_height = section.settings.mobile_logo_max_width | divided_by: logo.aspect_ratio | round
+            %}
+            {{ logo | image_url: width: 300 | image_tag: widths: '50, 100, 150, 200, 250, 300', sizes: section.settings.logo_max_width, height: logo_height, width: section.settings.logo_width, alt: logo_alt, class: 'inline-block' }}
+          </div>
+        {% endif %}
+      </a>
+    {% else %}
+      <a href="{{ routes.root_url }}" class="block text-center">
+        <strong>{{ header_settings.logo_text | default: shop.name }}</strong>
+      </a>
+    {% endif %}
+</div>

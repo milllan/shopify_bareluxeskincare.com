@@ -1,0 +1,1214 @@
+<script src="{{ 'header.min.js' | asset_url }}" defer="defer"></script>
+<script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Organization",
+  "name": {{ shop.name | json }},
+  {% if section.settings.logo %}
+    {% assign image_size = section.settings.logo.width %}
+    "logo": {{ section.settings.logo | image_url: width: image_size | prepend: "https:" | json }},
+  {% endif %}
+  "sameAs": [
+    {{ settings.social_twitter_link | json }},
+    {{ settings.social_facebook_link | json }},
+    {{ settings.social_pinterest_link | json }},
+    {{ settings.social_instagram_link | json }},
+    {{ settings.social_tumblr_link | json }},
+    {{ settings.social_snapchat_link | json }},
+    {{ settings.social_youtube_link | json }},
+    {{ settings.social_vimeo_link | json }}
+  ],
+  "url": {{ shop.url | append: page.url | json }}
+}
+</script>
+
+{% if request.page_type == 'index' %}
+  {% assign potential_action_target = shop.url | append: routes.search_url | append: "?q={search_term_string}" %}
+  <script type="application/ld+json">
+    {
+      "@context": "http://schema.org",
+      "@type": "WebSite",
+      "name": {{ shop.name | json }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {{ potential_action_target | json }},
+        "query-input": "required name=search_term_string"
+      },
+      "url": {{ shop.url | append: page.url | json }}
+    }
+  </script>
+{% endif %}
+
+{% liquid
+    assign transparent_on_top = false
+
+    if template.name == 'index'
+        assign transparent_on_top = section.settings.transparent_on_top
+    endif
+
+    assign show_language_switcher = section.settings.show_language_switcher
+    assign show_currency_switcher = section.settings.show_currency_switcher
+    assign show_account_icon = section.settings.show_account_icon
+    assign show_wishlist_icon = section.settings.show_wishlist_icon
+    assign show_compare_icon = section.settings.show_compare_icon
+    assign show_cart_icon = section.settings.show_cart_icon
+    assign show_country_selector = section.settings.show_country_selector
+    assign design = section.settings.header_design
+    assign container = section.settings.container
+    assign search_settings = section.settings.search
+
+    if container == 'w-full'
+        assign container = container | append: ' px-4'
+    endif
+%}
+
+{% style %}
+  :root {
+    --logo-width-desktop: {{ section.settings.logo_max_width }}px;
+    --logo-width-mobile: {{ section.settings.mobile_logo_max_width }}px;
+    --logo-width-sticky: {{ section.settings.sticky_logo_max_width }}px;
+  }
+  .sf-header header {
+      background-color: {{ settings.color_header_bg }};
+      color: {{ settings.color_header_link }};
+  }
+  .sf-header.sf-mega-active header {
+      color: #000;
+  }
+  .sf-header.sf-mega-active .transparent-on-top header {
+    color: {{ settings.color_header_link }};
+  }
+  {% if transparent_on_top %}
+      .sf-header .transparent-on-top header {
+          color: {{ settings.color_header_transparent }};
+      }
+  {% endif %}
+{% endstyle %}
+<section
+    data-section-id="{{ section.id }}"
+    data-section-type="header"
+    data-page="{{ request.path | strip }}"
+    data-header-design="{{ section.settings.header_design }}"
+    {% if request.design_mode == true %}
+        data-design-mode="true"
+    {% endif %}
+    class="sf-header {% if cart.item_count > 0 %} cart-has-items{% endif %}"
+    data-transparent="{{ transparent_on_top }}"
+    data-sticky="{{ section.settings.header_sticky }}"
+>
+    {% render 'header__topbar', header: section %}
+    <div class="absolute inset-x-0 z-[70] header__wrapper {% if transparent_on_top %} transparent-on-top{% endif %}">
+        {% comment %}Header Mobile{% endcomment %}
+        <header
+            class="flex lg:hidden sf-header__mobile container-fluid bg-white items-center"
+            data-screen="sf-header__mobile"
+            data-transparent="{{ transparent_on_top }}"
+        >
+            <a class="flex flex-1 w-1/4 py-3.5 sf-menu-button">
+              <svg class="w-[22px] h-[22px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path d="M442 114H6a6 6 0 0 1-6-6V84a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6zm0 160H6a6 6 0 0 1-6-6v-24a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6zm0 160H6a6 6 0 0 1-6-6v-24a6 6 0 0 1 6-6h436a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6z"/>
+              </svg>
+            </a>
+            {% comment %} Header-logo-mobile {% endcomment %}
+            {% liquid
+              assign justify_css = justify | default: 'justify-center'
+              assign class = 'sf-logo sf-logo--mobile px-4 ' | append: 'w-1/2' | append: ' ' | append: justify_css
+            
+              assign aspect_ratio = section.settings.logo.aspect_ratio | default: 2.333
+              assign aspect_ratio_mobile = section.settings.logo_mobile.aspect_ratio | default: aspect_ratio
+              
+              if section.settings.logo
+                assign class = class | append: ' has-logo-img'
+              endif
+            
+              assign is_svg = false
+              assign logo = section.settings.logo_mobile_svg
+            
+              unless logo == blank
+                assign is_svg = true
+              else
+                assign logo = section.settings.logo_mobile
+                if logo == blank
+                  assign logo = section.settings.logo_svg
+                  assign is_svg = true
+                endif
+                if logo == blank
+                  assign is_svg = false
+                  assign logo = section.settings.logo
+                endif
+              endunless
+            %}
+            
+            <div class="{{ class | strip_newlines }}">
+                {% if logo != blank %}
+                  <a href="{{ routes.root_url }}" class="block py-2.5 logo-img relative" title="{{ shop.name }}">
+                    {% if is_svg %}
+                      <div class="sf-image sf-logo-mobile">
+                        <img src="{{ logo }}" alt="{{ logo_alt }}" width="140px" height="39px" loading="eager">
+                      </div>
+                    {% else %}
+                      <div class="sf-image sf-logo-mobile" style="--aspect-ratio: {{ aspect_ratio }};--aspect-ratio-mobile: {{ aspect_ratio_mobile }}">
+                        {% liquid
+                          assign logo_alt = logo.alt | default: shop.name | escape
+                          assign logo_height = section.settings.mobile_logo_max_width | divided_by: logo.aspect_ratio | round
+                        %}
+                        {{ logo | image_url: width: section.settings.width | image_tag:
+                          class: 'inline-block',
+                          widths: '50, 100, 150, 200, 250, 300, 400',
+                          height: logo_height,
+                          width: section.settings.logo_width,
+                          alt: logo_alt
+                        }}
+                      </div>
+                    {% endif %}
+                  </a>
+                {% else %}
+                  <a href="{{ routes.root_url }}" class="block text-center">
+                    <strong>{{ section.settings.logo_text | default: shop.name }}</strong>
+                  </a>
+                {% endif %}
+            </div>
+            {% comment %} End header logo mobile {% endcomment %}
+            {% if show_cart_icon or search_settings != 'hide' %}
+                <div class="w-1/4 flex flex-1 items-center justify-end sf-header__mobile-right">
+                    {% if search_settings != 'hide' %}
+                    <m-search-popup class="flex justify-center items-center p-2" data-open-search-popup>
+                        <span class="sf__search-mb-icon">
+                          <svg class="w-[20px] h-[20px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <path d="M508.5 468.9L387.1 347.5c-2.3-2.3-5.3-3.5-8.5-3.5h-13.2c31.5-36.5 50.6-84 50.6-136C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c52 0 99.5-19.1 136-50.6v13.2c0 3.2 1.3 6.2 3.5 8.5l121.4 121.4c4.7 4.7 12.3 4.7 17 0l22.6-22.6c4.7-4.7 4.7-12.3 0-17zM208 368c-88.4 0-160-71.6-160-160S119.6 48 208 48s160 71.6 160 160-71.6 160-160 160z"/>
+                          </svg>
+                        </span>
+                    </m-search-popup>
+                    {% endif %}
+                    {% if show_cart_icon %}
+                      {% render 'cart' %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </header>
+
+        {% comment %}Header Desktop{% endcomment %}
+        <header
+            class="hidden lg:block bg-white sf-header__desktop {{ design }}"
+            data-screen="sf-header__desktop"
+            data-transparent="{{ transparent_on_top }}"
+        >
+            <div class="sf-header__bg pointer-events-none"></div>
+            <div class="sf-header__dropdown-bg absolute top-full left-0 right-0 pointer-events-none"></div>
+            {% case design %}
+                {% when 'logo-center-menu-left' %}
+                    <div class="{{ container }} relative z-[1]">
+                        <div class="sf-menu-logo-bar flex -mx-4 items-center">
+                            {% render 'header-main-menu-container', section: section, box_size: 'w-5/12' %}
+                            {% render 'header-logo', header_settings: section.settings, box_size: 'w-1/6' %}
+                            <div class="w-5/12 flex flex-grow justify-end items-center">
+                                {% liquid
+                                  if show_language_switcher
+                                    render 'language-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_currency_switcher
+                                      render 'currency-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_country_selector
+                                      render 'country-selector', box_size: 'hidden xl:block'
+                                  endif
+
+                                  render 'header-option-item__search', header_settings: section.settings
+                                  if show_account_icon
+                                      render 'header-option-item__account', display_by: 'icon'
+                                  endif
+
+                                  if show_wishlist_icon
+                                      render 'header-option-item__wishlist', display_by: 'icon'
+                                  endif
+
+                                  if show_compare_icon
+                                      render 'header-option-item__compare', display_by: 'icon'
+                                  endif
+
+                                  if show_cart_icon
+                                      render 'cart'
+                                  endif
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                {% when 'both-center' %}
+                    <div class="{{ container }} relative z-[1]">
+                        <div class="sf-menu-logo-bar flex -mx-4 items-center">
+                            <div class="flex flex-grow w-1/6 items-center">
+                                {% liquid
+                                  if show_language_switcher
+                                    render 'language-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_currency_switcher
+                                      render 'currency-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_country_selector
+                                    render 'country-selector', box_size: 'hidden xl:block'
+                                  endif
+
+                                  render 'header-option-item__search', header_settings: section.settings, icon_left: true
+                                %}
+                            </div>
+                            {% render 'header-main-menu-container', section: section, box_size: 'w-1/4', justify: 'justify-end' %}
+                            {% render 'header-logo', header_settings: section.settings, box_size: 'w-1/6' %}
+                            {% render 'header-main-menu-container', section: section, menu: 'secondary_menu', box_size: 'w-1/4' %}
+                            <div class="w-1/6 flex justify-end sf-options-wrapper__desktop items-center">
+                                {% liquid
+                                  if show_account_icon
+                                    render 'header-option-item__account', display_by: 'icon'
+                                  endif
+                                  
+                                  if show_wishlist_icon
+                                      render 'header-option-item__wishlist', display_by: 'icon'
+                                  endif
+
+                                  if show_compare_icon
+                                      render 'header-option-item__compare', display_by: 'icon'
+                                  endif
+
+                                  if show_cart_icon
+                                      render 'cart'
+                                  endif
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                {% when 'logo-left-menu-center' %}
+                    <div class="{{ container }} relative z-[1]">
+                        <div class="sf-menu-logo-bar flex -mx-4 items-center">
+                            {% render 'header-logo', header_settings: section.settings, box_size: 'flex-1', justify: 'justify-start' %}
+                            {% render 'header-main-menu-container', section: section, box_size: 'flex-grow-[2] shrink', justify: 'justify-center' %}
+                            <div class="flex flex-1 justify-end items-center">
+                                {% liquid
+                                  if show_language_switcher
+                                    render 'language-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_currency_switcher
+                                      render 'currency-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_country_selector
+                                    render 'country-selector', box_size: 'hidden xl:block'
+                                  endif
+
+                                  render 'header-option-item__search', header_settings: section.settings
+                                  if show_account_icon
+                                      render 'header-option-item__account', display_by: 'icon'
+                                  endif
+
+                                  if show_wishlist_icon
+                                      render 'header-option-item__wishlist', display_by: 'icon'
+                                  endif
+
+                                  if show_compare_icon
+                                      render 'header-option-item__compare', display_by: 'icon'
+                                  endif
+
+                                  if show_cart_icon
+                                      render 'cart'
+                                  endif
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                {% when 'logo-center__2l' %}
+                    <div class="{{ container }} sf__header-main-top relative">
+                        <div class="flex sf-menu-logo-bar items-center">
+                            <div class="w-2/5 flex flex-grow items-center">
+                                {% liquid
+                                  if show_language_switcher
+                                    render 'language-switcher', box_size: '-mx-4'
+                                  endif
+
+                                  if show_currency_switcher
+                                      render 'currency-switcher'
+                                  endif
+
+                                  if show_country_selector
+                                    render 'country-selector'
+                                  endif
+
+                                  render 'header-option-item__search', header_settings: section.settings, icon_left: true
+                                %}
+                            </div>
+                            {% render 'header-logo', header_settings: section.settings, box_size: 'w-1/5' %}
+                            <div class="w-2/5 flex justify-end sf-options-wrapper__desktop items-center">
+                                {% liquid
+                                  if show_account_icon
+                                    render 'header-option-item__account', display_by: 'icon'
+                                  endif
+
+                                  if show_wishlist_icon
+                                      render 'header-option-item__wishlist', display_by: 'icon'
+                                  endif
+
+                                  if show_compare_icon
+                                      render 'header-option-item__compare', display_by: 'icon'
+                                  endif
+
+                                  if show_cart_icon
+                                      render 'cart'
+                                  endif
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="{{ container }} sf__header-main-menu relative">
+                        {% render 'header-main-menu-container', section: section, justify: 'justify-center', box_size: '-mx-4' %}
+                        <div class="flex justify-end sf-options-wrapper__desktop items-center">
+                            {% liquid
+                              if show_account_icon
+                                render 'header-option-item__account', display_by: 'icon'
+                              endif
+
+                              if show_wishlist_icon
+                                  render 'header-option-item__wishlist', display_by: 'icon'
+                              endif
+
+                              if show_compare_icon
+                                  render 'header-option-item__compare', display_by: 'icon'
+                              endif
+
+                              if show_cart_icon
+                                  render 'cart'
+                              endif
+                            %}
+                        </div>
+                    </div>
+                {% when 'logo-left__2l' %}
+                    <div class="{{ container }} sf__header-main-top">
+                        <div class="flex sf-menu-logo-bar -mx-4 items-center py-2">
+                            {% render 'header-logo', header_settings: section.settings, box_size: 'w-1/3', box_size: 'justify-start' %}
+                            <div class="w-2/3 flex flex-grow justify-end items-center">
+                                {% liquid
+                                  render 'header-option-item__search', header_settings: section.settings
+
+                                  if show_language_switcher
+                                    render 'language-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_currency_switcher
+                                    render 'currency-switcher', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_country_selector
+                                    render 'country-selector', box_size: 'hidden xl:block'
+                                  endif
+
+                                  if show_account_icon
+                                    render 'header-option-item__account', display_by: 'icon'
+                                  endif
+
+                                  if show_wishlist_icon
+                                    render 'header-option-item__wishlist', display_by: 'icon'
+                                  endif
+
+                                  if show_compare_icon
+                                    render 'header-option-item__compare', display_by: 'icon'
+                                  endif
+
+                                  if show_cart_icon
+                                    render 'cart'
+                                  endif
+                                %}
+                            </div>
+                        </div>
+                    </div>
+                    {% assign box_size = container | append: ' -mx-4' %}
+                    <div class="sf-menu-bar bg-color-menubar-background text-color-menubar">
+                        {% render 'header-main-menu-container', section: section, box_size: box_size %}
+                    </div>
+            {% endcase %}
+        </header>
+    </div>
+
+    {% liquid
+        assign main_menu = section.settings.main_menu
+        assign mobile_menu = section.settings.mobile_menu
+        
+        if mobile_menu == blank
+            assign menu = main_menu
+        else
+            assign menu = mobile_menu
+        endif
+    %}
+
+    <div
+        style="--tw-bg-opacity: 0;"
+        class="sf-menu-wrapper sf-menu-wrapper-mobile touch-none hidden fixed z-[80] inset-0 transition-colors duration-300 bg-black"
+    >
+        <div class="sf-menu__content overscroll-contain transition-transform -translate-x-full duration-300 md:w-[450px] z-50 bg-white text-black overflow-x-hidden h-full overflow-y-scroll">
+            <div class="flex flex-col">
+                <div class="sf-menu-content flex-grow flex flex-col justify-between transition-all opacity-0 opacity-100 duration-300">
+                    <div class="w-full sf-menu-links pt-8">
+                    {% for link in linklists[menu].links %}
+                        {% if link.links != blank %}
+                            <li class="list-none sf-link flex items-center" data-url="{{ link.url }}">
+                                <a href="{{ link.url }}" class="w-full px-4 py-3 flex items-center justify-between relative"{% if link.url contains '#' %} data-toggle-submenu="1"{% endif %}>
+                                    <span>{{ link.title }}</span>
+                                </a>
+                                <span class="sf__toggle-submenu-mb flex items-center justify-center" data-toggle-submenu="1">
+                                  <svg class="w-[16px] h-[16px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M17.525 36.465l-7.071 7.07c-4.686 4.686-4.686 12.284 0 16.971L205.947 256 10.454 451.494c-4.686 4.686-4.686 12.284 0 16.971l7.071 7.07c4.686 4.686 12.284 4.686 16.97 0l211.051-211.05c4.686-4.686 4.686-12.284 0-16.971L34.495 36.465c-4.686-4.687-12.284-4.687-16.97 0z"/></svg>
+                                </span>
+                                <div class="sf-sub-links hidden absolute inset-y-0 bg-white flex-col left-full w-full">
+                                    <div class="h-full overflow-y-scroll overscroll-contain">
+                                        <button class="back p-4 font-medium flex items-center" data-level="1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 17"><path fill="currentColor" d="M8.12109 15.9141c-.21093.1875-.41015.1875-.59765 0L.175781 8.53125c-.210937-.1875-.210937-.375 0-.5625L7.52344.585938c.1875-.1875.38672-.1875.59765 0l.70313.703122c.1875.1875.1875.38672 0 .59766L3.375 7.33594h11.9883c.2812 0 .4219.14062.4219.42187v.98438c0 .28125-.1407.42187-.4219.42187H3.375l5.44922 5.44924c.1875.2109.1875.4101 0 .5976l-.70313.7032z"/></svg>
+                                        <span class="ml-3">{% render 'new-locale', key: 'layout.back' %}</span>
+                                        </button>
+                                    <ul class="sf-sub-links--level-2 pb-4">
+                                        {% for child in link.links %}
+                                        <li class="list-none sf-link flex items-center" data-url="{{ link.url }}">
+                                            <a href="{{ child.url }}" class="w-full px-4 py-3 flex items-center justify-between relative"{% if child.url contains '#' %} data-toggle-submenu="2"{% endif %}>
+                                            <span>{{ child.title }}</span>
+                                            </a>
+                                            {% if child.links != blank %}
+                                            <span class="sf__toggle-submenu-mb flex items-center justify-center" data-toggle-submenu="2">
+                                              <svg class="w-[16px] h-[16px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 512"><path d="M17.525 36.465l-7.071 7.07c-4.686 4.686-4.686 12.284 0 16.971L205.947 256 10.454 451.494c-4.686 4.686-4.686 12.284 0 16.971l7.071 7.07c4.686 4.686 12.284 4.686 16.97 0l211.051-211.05c4.686-4.686 4.686-12.284 0-16.971L34.495 36.465c-4.686-4.687-12.284-4.687-16.97 0z"/></svg>
+                                            </span>
+                                            <div class="sf-sub-links hidden absolute inset-y-0 bg-white flex-col left-full w-full">
+                                            <div class="h-full overflow-y-scroll overscroll-contain">
+                                                <button class="back p-4 font-medium flex items-center" data-level="2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-[16px] h-[16px]" fill="none" viewBox="0 0 16 17"><path fill="currentColor" d="M8.12109 15.9141c-.21093.1875-.41015.1875-.59765 0L.175781 8.53125c-.210937-.1875-.210937-.375 0-.5625L7.52344.585938c.1875-.1875.38672-.1875.59765 0l.70313.703122c.1875.1875.1875.38672 0 .59766L3.375 7.33594h11.9883c.2812 0 .4219.14062.4219.42187v.98438c0 .28125-.1407.42187-.4219.42187H3.375l5.44922 5.44924c.1875.2109.1875.4101 0 .5976l-.70313.7032z"/></svg>
+                                                <span class="ml-3">{% render 'new-locale', key: 'layout.back' %}</span>
+                                                </button>
+                                                <ul class="sf-sub-links--level-2 pb-4">
+                                                {% render 'mega-menu-link' for child.links as link %}
+                                                </ul>
+                                            </div>
+                                            </div>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                    </div>
+                                </div>
+                            </li>
+                        {% else %}
+                        {% render 'mega-menu-link' with link as link %}
+                        {% endif %}
+                    {% endfor %}
+                    </div>
+                {% render 'mega-menu-customer', section: section %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="sf-header__overlay hidden md:block pointer-events-none fixed bg-black -inset-0" style="--tw-bg-opacity: 0.6;" ></div>
+    {% render 'search-popup', header_settings: section.settings %}
+</section>
+
+<script>
+// Set header height
+function _shh() {
+  if (!_mh || !_dh) {
+    _mh = document.querySelector('header.sf-header__mobile');
+    _dh = document.querySelector('header.sf-header__desktop');
+  }
+  // Header
+  var _hd = window.innerWidth < 1024 ? _mh : _dh;
+  if (_hd) {
+    document.documentElement.style.setProperty('--sf-header-height', _hd.offsetHeight + 'px');
+    window.MinimogSettings.headerHeight = _hd.offsetHeight;
+  }
+}
+
+// setMainContentPadding
+function _smcp() {
+  // pageTemplate
+  var _pt = document.documentElement.dataset.template;
+  if (window.innerWidth >= 1024) {
+    if (_dh && _dh.dataset.transparent === "true") {
+      if (_pt === 'index' || _pt === 'collection') {
+        document.documentElement.style.setProperty('--main-content-padding-top', '0px');
+      }
+    }
+  } else {
+    document.documentElement.style.removeProperty('--main-content-padding-top');
+  }
+}
+_shh();
+_smcp();
+</script>
+
+{% schema %}
+{
+  "name": "Header",
+  "settings": [
+    {
+      "type": "select",
+      "id": "header_design",
+      "label": "Header design",
+      "options": [
+        {
+          "group": "Logo and menu in 1 line",
+          "value": "logo-center-menu-left",
+          "label": "Logo center 1"
+        },
+        {
+          "group": "Logo and menu in 1 line",
+          "value": "both-center",
+          "label": "Logo center 2 (with 2nd menu)"
+        },
+        {
+          "group": "Logo and menu in 1 line",
+          "value": "logo-left-menu-center",
+          "label": "Logo left"
+        },
+        {
+          "group": "Logo and menu in 2 lines",
+          "value": "logo-center__2l",
+          "label": "Logo center"
+        },
+        {
+          "group": "Logo and menu in 2 lines",
+          "value": "logo-left__2l",
+          "label": "Logo left"
+        }
+      ],
+      "default": "logo-center-menu-left"
+    },
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container-fluid",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "header_sticky",
+      "label": "Sticky on top",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "transparent_on_top",
+      "label": "Transparent on top",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Logos"
+    },
+    {
+      "type": "text",
+      "id": "logo_text",
+      "label": "Logo text",
+      "default": "MINIMOG"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Default Logo"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_mobile",
+      "label": "Logo mobile"
+    },
+    {
+      "type": "image_picker",
+      "id": "logo_transparent",
+      "label": "Logo for transparent header"
+    },
+    {
+      "type": "text",
+      "id": "logo_svg",
+      "label": "Default Logo - SVG",
+      "info": "Upload your SVG logo to [Files](/admin/settings/files) to get the URL."
+    },
+    {
+      "type": "text",
+      "id": "logo_mobile_svg",
+      "label": "Logo mobile - SVG"
+    },
+    {
+      "type": "text",
+      "id": "logo_transparent_svg",
+      "label": "Logo for transparent header - SVG"
+    },
+    {
+      "type": "range",
+      "id": "logo_max_width",
+      "min": 30,
+      "max": 450,
+      "step": 5,
+      "unit": "px",
+      "label": "Logo width (desktop)",
+      "default": 155
+    },
+    {
+      "type": "range",
+      "id": "sticky_logo_max_width",
+      "min": 30,
+      "max": 450,
+      "step": 5,
+      "unit": "px",
+      "label": "Logo width (sticky)",
+      "default": 105
+    },
+    {
+      "type": "range",
+      "id": "mobile_logo_max_width",
+      "min": 30,
+      "max": 450,
+      "step": 5,
+      "unit": "px",
+      "label": "Logo width (mobile)",
+      "default": 115
+    },
+    {
+      "type": "header",
+      "content": "Menu"
+    },
+    {
+      "type": "link_list",
+      "id": "main_menu",
+      "label": "Main menu",
+      "default": "main-menu"
+    },
+    {
+      "type": "link_list",
+      "id": "secondary_menu",
+      "label": "Secondary menu",
+      "info": "For header with 2 menus"
+    },
+    {
+      "type": "link_list",
+      "id": "mobile_menu",
+      "label": "Mobile menu",
+      "info": "Leave blank to use Main menu"
+    },
+    {
+      "type": "checkbox",
+      "id": "uppercase_parent_level",
+      "label": "Uppercase first level",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Addons"
+    },
+    {
+      "type": "select",
+      "id": "search",
+      "label": "Search",
+      "options": [
+        {
+          "value": "hide",
+          "label": "Hide"
+        },
+        {
+          "value": "show_icon",
+          "label": "Show icon"
+        },
+        {
+          "value": "show_full",
+          "label": "Show full search box"
+        }
+      ],
+      "default": "show_icon"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_account_icon",
+      "label": "Show account icon",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_icon",
+      "label": "Show cart icon",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_wishlist_icon",
+      "label": "Show wishlist icon",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_compare_icon",
+      "label": "Show comparison icon",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_currency_switcher",
+      "label": "Show currency selector",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_country_selector",
+      "label": "Show country/region selector",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_language_switcher",
+      "label": "Show language selector",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Instructions"
+    },
+    {
+      "type": "paragraph",
+      "content": "To add a country/region, go to your [payment settings.](/admin/settings/payments)"
+    },
+    {
+      "type": "paragraph",
+      "content": "To add a language, go to your [language settings.](/admin/settings/languages)"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "topbar",
+      "name": "Top Bar",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_divider",
+          "label": "Show divider",
+          "default": false
+        },
+        {
+          "type": "header",
+          "content": "Addons"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_phone_numb",
+          "label": "Show phone number",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_email",
+          "label": "Show email",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_social_links",
+          "label": "Show social media links",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_stores_page",
+          "label": "Show find store page",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_currency_switcher",
+          "label": "Show currency selector",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_country_selector",
+          "label": "Show country/region selector",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "show_language_switcher",
+          "label": "Show language selector",
+          "default": false
+        },
+        {
+          "type": "textarea",
+          "id": "alert_message",
+          "label": "Message",
+          "info": "Leave blank to hide message"
+        }
+      ]
+    },
+    {
+      "type": "banner",
+      "name": "Banner (Mega menu)",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "For item"
+        },
+        {
+          "type": "select",
+          "id": "container",
+          "label": "Container",
+          "default": "inherit",
+          "info": "Set width for the content wrapper",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Use header's container"
+            },
+            {
+              "value": "container-fluid",
+              "label": "Default"
+            },
+            {
+              "value": "w-full",
+              "label": "Full width"
+            },
+            {
+              "value": "container",
+              "label": "Use container box"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "Settings"
+        },
+        {
+          "type": "select",
+          "id": "banner_style",
+          "label": "Banner style",
+          "default": "outside",
+          "options": [
+            {
+              "label": "Content outside",
+              "value": "outside"
+            },
+            {
+              "label": "Content inside",
+              "value": "inside"
+            }
+          ]
+        },
+        {
+          "type": "image_picker",
+          "id": "banner_image",
+          "label": "Banner image"
+        },
+        {
+          "id": "banner_link",
+          "type": "url",
+          "label": "Banner link"
+        },
+        {
+          "type": "text",
+          "id": "banner_title",
+          "label": "Title",
+          "default": "New collection"
+        },
+        {
+          "type": "text",
+          "id": "banner_desc",
+          "label": "Subtitle"
+        },
+        {
+          "type": "text",
+          "id": "banner_button_text",
+          "label": "Button label",
+          "default": "Shop now"
+        }
+      ]
+    },
+    {
+      "type": "product-list",
+      "name": "Products list (Mega menu)",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "For item"
+        },
+        {
+          "type": "select",
+          "id": "container",
+          "label": "Container",
+          "default": "inherit",
+          "info": "Set width for the content wrapper",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Use header's container"
+            },
+            {
+              "value": "container-fluid",
+              "label": "Default"
+            },
+            {
+              "value": "w-full",
+              "label": "Full width"
+            },
+            {
+              "value": "container",
+              "label": "Use container box"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "id": "stretch_width",
+          "label": "Stretch product width",
+          "default": false
+        },
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Select collection"
+        },
+        {
+          "type": "header",
+          "content": "Slider settings"
+        },
+        {
+          "type": "range",
+          "id": "limit",
+          "max": 12,
+          "min": 1,
+          "label": "Number of products to show",
+          "default": 6
+        },
+        {
+          "type": "range",
+          "id": "columns",
+          "max": 6,
+          "min": 1,
+          "default": 2,
+          "label": "Number of columns"
+        }
+      ]
+    },
+    {
+      "type": "collection-list",
+      "name": "Collections (Mega menu)",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "For item"
+        },
+        {
+          "type": "select",
+          "id": "container",
+          "label": "Container",
+          "default": "inherit",
+          "info": "Set width for the content wrapper",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Use header's container"
+            },
+            {
+              "value": "container-fluid",
+              "label": "Default"
+            },
+            {
+              "value": "w-full",
+              "label": "Full width"
+            },
+            {
+              "value": "container",
+              "label": "Use container box"
+            }
+          ]
+        },
+        {
+          "type": "header",
+          "content": "Collection list"
+        },
+        {
+          "type": "header",
+          "content": "Collection 1"
+        },
+        {
+          "type": "collection",
+          "id": "collection_1",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_1",
+          "label": "Featured image"
+        },
+        {
+          "type": "header",
+          "content": "Collection 2"
+        },
+        {
+          "type": "collection",
+          "id": "collection_2",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_2",
+          "label": "Featured image"
+        },
+        {
+          "type": "header",
+          "content": "Collection 3"
+        },
+        {
+          "type": "collection",
+          "id": "collection_3",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_3",
+          "label": "Featured image"
+        },
+        {
+          "type": "header",
+          "content": "Collection 4"
+        },
+        {
+          "type": "collection",
+          "id": "collection_4",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_4",
+          "label": "Featured image"
+        },
+        {
+          "type": "header",
+          "content": "Collection 5"
+        },
+        {
+          "type": "collection",
+          "id": "collection_5",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_5",
+          "label": "Featured image"
+        },
+        {
+          "type": "header",
+          "content": "Collection 6"
+        },
+        {
+          "type": "collection",
+          "id": "collection_6",
+          "label": "Collection"
+        },
+        {
+          "type": "image_picker",
+          "id": "image_6",
+          "label": "Featured image"
+        }
+      ]
+    },
+    {
+      "type": "bloglist",
+      "name": "Blog posts (Mega menu)",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "For item"
+        },
+        {
+          "type": "select",
+          "id": "container",
+          "label": "Container",
+          "default": "inherit",
+          "info": "Set width for the content wrapper",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Use header's container"
+            },
+            {
+              "value": "container-fluid",
+              "label": "Default"
+            },
+            {
+              "value": "w-full",
+              "label": "Full width"
+            },
+            {
+              "value": "container",
+              "label": "Use container box"
+            }
+          ]
+        },
+        {
+          "type": "blog",
+          "id": "blog",
+          "label": "Select blog"
+        }
+      ]
+    },
+    {
+      "type": "custom_html",
+      "name": "Custom HTML (Mega menu)",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "For item"
+        },
+        {
+          "type": "select",
+          "id": "container",
+          "label": "Container",
+          "default": "inherit",
+          "info": "Set width for the content wrapper",
+          "options": [
+            {
+              "value": "inherit",
+              "label": "Use header's container"
+            },
+            {
+              "value": "container-fluid",
+              "label": "Default"
+            },
+            {
+              "value": "w-full",
+              "label": "Full width"
+            },
+            {
+              "value": "container",
+              "label": "Use container box"
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "id": "html",
+          "label": "Custom HTML"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

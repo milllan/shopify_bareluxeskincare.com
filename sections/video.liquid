@@ -1,0 +1,321 @@
+{{ 'video.css' | asset_url | stylesheet_tag }}
+
+{% liquid
+  assign bg_color = section.settings.background_color
+  assign has_bg = false
+
+  unless bg_color == "rgba(0,0,0,0)" or bg_color == blank
+    assign has_bg = true
+  endunless
+
+  if section.settings.width == blank
+    assign width = '100%'
+  else
+    assign width = section.settings.width
+  endif
+
+  assign autoplay = false
+  if section.settings.autoplay and section.settings.muted
+    assign autoplay = true
+  endif
+
+  assign cover_image = false
+  if section.settings.image != blank
+    assign cover_image = true
+  endif
+%}
+
+<section
+  class="sf-video sf-section-padding {{ section.settings.custom_class }}"
+  data-section-id="{{ section.id }}"
+  data-section-type="video-section"
+  {%- if has_bg -%}
+    data-bg="{{ bg_color | color_to_hsl }}"
+    style="background-color: {{ bg_color }};--section-padding-top: {{ section.settings.padding_top }}px; --section-padding-bottom: {{ section.settings.padding_bottom }}px;"
+  {%- endif -%}
+  data-video-ratio="{{ section.settings.ratio | default: '16:9' }}" 
+  data-autoplay="{{ autoplay }}" 
+  data-loop="{{ section.settings.loop }}"
+  data-muted="{{ section.settings.muted }}"
+>
+  <div class="{{ section.settings.container }}{% if has_bg == false %} section-my{% else %} section-py{% endif %}">
+    {%- if section.settings.video_link != blank -%}
+      <div class="sf-video__container mx-auto max-w-full" style="width: {{- width -}};">
+        <div class="sf-video__wrapper" style="--aspect-ratio: {{ section.settings.ratio | replace: ':', '/' }}">
+          <video-component class="deferred-media no-js-hidden" data-media-id="{{ section.settings.video_link.id }}" data-auto-play="{{ autoplay }}" data-cover-image="{{ cover_image }}">
+            <button id="Deferred-Poster-Modal-{{ section.settings.video_link.id }}" class="deferred-media__poster" type="button" aria-label="{{ 'sections.video.play' | t }}">
+              <span class="deferred-media__poster-button motion-reduce absolute sf-video__play sf-video__play--style-{{ section.settings.play_style }} sf-video__play--size-{{ section.settings.play_size }} text-{{ section.settings.text_color }}">
+                <svg class="w-[20px] h-[20px]" viewBox="0 0 18 18" fill="currentColor">
+                  <path d="M15.562 8.1L3.87.225c-.818-.562-1.87 0-1.87.9v15.75c0 .9 1.052 1.462 1.87.9L15.563 9.9c.584-.45.584-1.35 0-1.8z" fill="currentColor"></path>
+                </svg>
+              </span>
+              {%- unless section.settings.video_title == blank -%}
+                <h2 class="sf-video__title text-xl hidden md:block {% if section.settings.text_size == 'medium' %}sm:text-3xl{% else %}sm:text-5xl{% endif %} text-{{ section.settings.text_color }}">
+                  {{ section.settings.video_title }}
+                </h2>
+              {%- endunless -%}
+              {%- if section.settings.image != blank -%}
+                <div class="sf-video__cover bg-center" style="background-image: url({{ section.settings.image | image_url: width: 1920 }})"></div>
+              {%- endif -%}
+            </button>  
+            <template>
+              {%- if section.settings.video_link.type == 'youtube' -%}
+                {% liquid
+                  assign youtubeURL = 'https://www.youtube.com/embed/' | append: section.settings.video_link.id | append: '?enablejsapi=1'
+                  if section.settings.muted
+                    assign youtubeURL = youtubeURL | append: '&mute=1'
+                    if section.settings.autoplay
+                      assign youtubeURL = youtubeURL | append: '&autoplay=1'
+                    endif
+                  endif
+                    
+                  if section.settings.loop
+                    assign youtubeURL = youtubeURL | append: '&loop=1&playlist=' | append: section.settings.video_link.id
+                  endif
+                %}
+                <iframe src="{{ youtubeURL }}" class="js-youtube" allow="autoplay; encrypted-media" allowfullscreen title="{{ section.settings.video_title | escape }}"></iframe>
+              {%- else -%}
+                {% liquid
+                  assign vimeoURL = 'https://player.vimeo.com/video/' | append: section.settings.video_link.id
+                  assign hasParam = false
+                  assign vimeoParam = ''
+
+                  if section.settings.muted
+                    assign hasParam = true
+                    assign vimeoParam = vimeoParam | append: '&muted=1'
+
+                    if section.settings.autoplay
+                      assign vimeoParam = vimeoParam | append: '&autoplay=1'
+                    endif
+                  endif
+
+                  if section.settings.loop
+                    assign hasParam = true
+                    assign vimeoParam = vimeoParam | append: '&loop=1'
+                  endif
+
+                  if hasParam
+                    assign vimeoURL = vimeoURL | append: '?' | append: vimeoParam
+                  endif
+                %}
+                <iframe src="{{ vimeoURL }}" class="js-vimeo" allow="autoplay; encrypted-media" allowfullscreen title="{{ section.settings.video_title | escape }}"></iframe>
+              {%- endif -%}
+            </template>
+          </video-component>
+        </div>
+      </div>
+    {%- else -%}
+      <div class="placeholder-noblocks text-center">
+        {{ 'homepage.onboarding.no_content' | t }}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Video",
+  "settings": [
+    {
+      "type": "select",
+      "id": "container",
+      "label": "Container type",
+      "default": "container-fluid",
+      "options": [
+        {
+          "value": "container-fluid",
+          "label": "Default"
+        },
+        {
+          "value": "w-full",
+          "label": "Full width"
+        },
+        {
+          "value": "container",
+          "label": "Use container box"
+        }
+      ]
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color"
+    },
+    {
+      "type": "header",
+      "content": "Video settings"
+    },
+    {
+      "type": "video_url",
+      "id": "video_link",
+      "label": "Video link",
+      "accept": [
+        "youtube",
+        "vimeo"
+      ],
+      "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+      "info": "Accepts YouTube or Vimeo links"
+    },
+    {
+      "type": "select",
+      "id": "ratio",
+      "label": "Video ratio",
+      "default": "16:9",
+      "options": [
+        {
+          "value": "16:9",
+          "label": "16:9"
+        },
+        {
+          "value": "21:9",
+          "label": "21:9"
+        },
+        {
+          "value": "4:3",
+          "label": "4:3"
+        }
+      ]
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Cover image",
+      "info": "Leave blank to use video thumbnail"
+    },
+    {
+      "type": "textarea",
+      "id": "video_title",
+      "label": "Heading"
+    },
+    {
+      "type": "select",
+      "id": "text_size",
+      "label": "Text size",
+      "default": "medium",
+      "options": [
+        {
+          "label": "Medium",
+          "value": "medium"
+        },
+        {
+          "label": "Large",
+          "value": "large"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_color",
+      "label": "Text color",
+      "options": [
+        {
+          "label": "Dark",
+          "value": "black"
+        },
+        {
+          "label": "Light",
+          "value": "white"
+        }
+      ],
+      "default": "white"
+    },
+    {
+      "type": "select",
+      "id": "play_style",
+      "label": "Play button style",
+      "options": [
+        {
+          "label": "Outline",
+          "value": "outline"
+        },
+        {
+          "label": "Solid",
+          "value": "solid"
+        }
+      ],
+      "default": "solid"
+    },
+    {
+      "type": "select",
+      "id": "play_size",
+      "label": "Play button size",
+      "options": [
+        {
+          "label": "Medium",
+          "value": "medium"
+        },
+        {
+          "label": "Large",
+          "value": "large"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "text",
+      "id": "width",
+      "label": "Video width",
+      "default": "650px",
+      "info": "Leave blank for follow container width"
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay",
+      "label": "Autoplay",
+      "default": false,
+      "info": "Only work if the muted box is checked"
+    },
+    {
+      "type": "checkbox",
+      "id": "loop",
+      "label": "Loop",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "muted",
+      "label": "Muted",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Section Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "default": 0,
+      "min": 0,
+      "max": 100,
+      "step": 2,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Custom Attributes"
+    },
+    {
+      "type": "text",
+      "id": "custom_class",
+      "label": "Custom classes"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video",
+      "category": "Video"
+    }
+  ]
+}
+{% endschema %}

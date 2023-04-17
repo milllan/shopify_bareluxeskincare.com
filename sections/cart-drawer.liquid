@@ -1,0 +1,91 @@
+{% assign f_cart_countdown = shop.metafields.foxecom-bs-kit.cart-countdown.value | default: shop.metafields.foxecom-bs-kit.cart-countdown %}
+<div
+  style="--tw-bg-opacity: 0;"
+  class="scd__wrapper touch-none hidden transition-colors duration-300 bg-black fixed z-[100] inset-0"
+>
+  <div class="scd__content transition-transform duration-300 translate-x-0 translate-x-full ml-auto min-h-full md:w-[450px] bg-white z-50">
+    <button class="scd__close p-2 cursor-pointer absolute">
+      <svg class="w-[24px] h-[24px]" fill="currentColor" stroke="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+        <path d="M193.94 256L296.5 153.44l21.15-21.15c3.12-3.12 3.12-8.19 0-11.31l-22.63-22.63c-3.12-3.12-8.19-3.12-11.31 0L160 222.06 36.29 98.34c-3.12-3.12-8.19-3.12-11.31 0L2.34 120.97c-3.12 3.12-3.12 8.19 0 11.31L126.06 256 2.34 379.71c-3.12 3.12-3.12 8.19 0 11.31l22.63 22.63c3.12 3.12 8.19 3.12 11.31 0L160 289.94 262.56 392.5l21.15 21.15c3.12 3.12 8.19 3.12 11.31 0l22.63-22.63c3.12-3.12 3.12-8.19 0-11.31L193.94 256z"/>
+      </svg>
+    </button>
+    <div class="flex flex-col h-full">
+      <div class="scd__header mx-6 py-4 md:pt-6">
+        <h3 class="text-2xl font-medium">{{ 'cart.general.title' | t }}</h3>
+        {% if f_cart_countdown.show_on_drawer == true and template.name != 'cart' %}
+          {% render 'foxkit-cart-countdown' %}
+        {% endif %}
+        {% render 'foxkit-cart-goal' %}
+      </div>
+      <div class="scd__body sf__custom_scroll overscroll-contain px-6 pb-4 flex flex-col flex-grow">
+        <form action="{{ routes.cart_url }}" method="post" id="cart-drawer-form" class="checkout-form" novalidate>
+        {%- if cart.items.size > 0 -%}
+          <div class="scd__items">
+            {% for item in cart.items %}
+              {% render 'cart-drawer-item', item: item %}
+            {% endfor %}
+          </div>
+        {%- else -%}
+          <div class="scd-empty-msg">
+            {{ 'cart.general.empty' | t }}
+          </div>
+        {%- endif -%}
+        </form>
+      </div>
+      <div class="scd__footer py-4 px-6">
+        {% render 'cart-addons' %}
+        <div class="scd__summary mb-4 pt-4" data-cart-summary>
+          <div data-discounts>
+            <ul class="scd-cart__discounts" role="list" data-discounts-list>
+            {% unless cart.cart_level_discount_applications.size == 0 %}
+                {% for discount in cart.cart_level_discount_applications %}
+                  <li>
+                    <svg aria-hidden="true" width="20" height="20" focusable="false" role="presentation" viewBox="0 0 12 13"><path fill-rule="evenodd" clip-rule="evenodd" d="M7 .5h3a2 2 0 0 1 2 2v3a.995.995 0 0 1-.293.707l-6 6a1 1 0 0 1-1.414 0l-4-4a1 1 0 0 1 0-1.414l6-6A.995.995 0 0 1 7 .5zm2 2a1 1 0 1 0 2 0 1 1 0 0 0-2 0z" fill="currentColor"></path></svg>
+                    <span>{{ discount.title | upcase }}&nbsp;(-{{ discount.total_allocated_amount | money }})</span>
+                  </li>
+                {% endfor %}
+            {% endunless %}
+            </ul>
+          </div>
+          <div class="scd__subtotal flex justify-between" data-cart-subtotal>
+            <span class="font-medium">{{ 'cart.general.subtotal' | t }}</span>
+            <span class="scd__subtotal-price font-medium sf-currency" data-cart-subtotal-price>{{ cart.total_price | money }}</span>
+          </div>
+        </div>
+        <div class="flex flex-col items-center">
+          {% assign show_terms = false %}
+          {% if settings.agree_text != blank and settings.show_agree_on_cart %}
+            <div class="agree-terms">
+              <label>
+                <input type="checkbox" name="agree_terms" value="yes" required>
+                <span>{{ settings.agree_text }}</span>
+              </label>
+            </div>
+            {% assign show_terms = true %}
+          {% endif %}
+          <button type="submit" form="cart-drawer-form" class="sf__btn sf__btn-primary w-full scd__checkout relative" name="checkout"{% if show_terms %} data-terms-action disabled{% endif %}>
+            <span>{{ 'cart.general.checkout' | t }}</span>
+            <svg class="animate-spin w-[18px] h-[18px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+          {%- if settings.cart_drawer_show_accelerated_button and additional_checkout_buttons -%}
+            <div class="additional-checkout-buttons w-full">
+              {{ content_for_additional_checkout_buttons }}
+            </div>
+          {%- endif -%}
+          <a class="underline mt-2" href="{{ routes.cart_url }}">
+            {{ 'cart.general.viewcart' | t }}
+          </a>
+        </div>
+        {% if settings.cart_drawer_trust_badge %}
+        <div class="scd__trust-badge mt-2">
+          <img src="{{ settings.cart_drawer_trust_badge | image_url: width: 840 }}" loading="lazy" width="400" height="100" alt="Trust secure badge">
+        </div>
+        {% endif %}
+      </div>
+      <div class="scd__overlay inset-0"></div>
+    </div>
+  </div>
+</div>

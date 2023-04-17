@@ -1,0 +1,21 @@
+{% if localization.available_countries.size > 1 %}
+  {% unless form_id %}
+    {% assign randomNumber = "now" | date: "%N" | modulo: 10 | plus: 25 %}
+    {% assign form_id = 'country-' | append: randomNumber %}
+  {% endunless %}
+  <div class="sf-country-switcher {{ box_size }} lg:py-3.5">
+    {% form 'localization', class: 'px-4', data-localization-form: '', id: form_id %}
+      <input type="hidden" name="country_code" value="{{ localization.country.iso_code }}" data-localization-input/>
+      <div class="sf__custom-select sf__select-{{ pos }}">
+        <select name="country_code" class="border-transparent bg-transparent" data-localization-select>
+          {%- for country in localization.available_countries -%}
+            <option
+                value="{{ country.iso_code }}"
+                {% if country.iso_code == localization.country.iso_code %}selected{% endif %}
+            >{{ country.name }} ({{ country.currency.iso_code }} {{ country.currency.symbol }})</option>
+          {%- endfor -%}
+        </select>
+      </div>
+    {%- endform -%}
+  </div>
+{% endif %}

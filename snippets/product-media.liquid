@@ -1,0 +1,523 @@
+{% liquid
+  if media_layout == null
+    assign media_layout = section.settings.layout
+  endif
+  assign enable_zoom = section.settings.show_zoom_button
+  assign enable_video_autoplay = section.settings.enable_video_autoplay
+
+  if show_thumbnails == null
+    assign show_thumbnails = true
+  endif
+  if show_dots == null
+    assign show_dots = true
+  endif
+  if show_nav == null
+    assign show_nav = true
+  endif
+
+  if template_product == null
+    assign template_product = false
+  endif
+
+  assign enableVariantGroupImg = false
+  assign hasVariantGI = false
+  assign variantGroups = product.metafields['foxecom-bs-kit']['variant-images'].value
+  if section.settings.enable_variant_group_images and product.metafields['foxecom-bs-kit']['variant-images'].value.enable
+    assign enableVariantGroupImg = true
+  endif
+
+  assign selected_variant = product.selected_or_first_available_variant
+
+  for media in variantGroups.mapping
+    assign mediaId = media.id | times: 1
+    if mediaId == selected_variant.id and media.media.size > 0
+      assign hasVariantGI = true
+    endif
+  endfor
+
+  assign wrapper_class = ''
+  if product.media.size > 1
+    assign wrapper_class = 'swiper-container'
+  endif
+
+  assign enableLoadingMedia = false
+  if hasVariantGI and template_product and section.settings.enable_variant_group_images
+    assign enableLoadingMedia = true
+  endif
+%}
+{% if product.media.size > 0 %}
+  <media-gallery
+    data-product-id="{{ product.id }}"
+    data-product-handle="{{ product.handle }}"
+    data-product-url="{{ product.url }}"
+    data-enable-image-zoom="{{ section.settings.show_zoom_button }}"
+    data-enable-history-state="{{ section.settings.enable_history_state }}"
+    data-enable-video-autoplay="{{ section.settings.enable_video_autoplay }}"
+    data-enable-variant-group-images="{{ enableVariantGroupImg }}"
+    data-layout="{{ media_layout }}"
+    data-section="{{ section.id }}"
+    class="{{ class }} w-full"
+    data-screen="{{ screen | default: 'desktop' }}"
+    {% if enableLoadingMedia %}
+      data-media-loading
+    {% endif %}
+    data-media-size="{{ product.media.size }}"
+  >
+    {% case media_layout %}
+      {% when 'layout-1' %}
+        <div
+          class="default-variant"
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="flex-grow sf__product-media-lists">
+            {%- for media in product.media -%}
+              <div
+                class="sf-prod-media-item media-type-{{ media.media_type }} overflow-hidden relative group"
+                data-index="{{ forloop.index0 }}"
+                data-media-type="{{ media.media_type }}"
+              >
+                {% render 'product-thumbnail',
+                  media: media,
+                  index: forloop.index0,
+                  autoplay: enable_video_autoplay,
+                  loop: true,
+                %}
+                {%- if enable_zoom and media.media_type != 'model' and media.media_type != 'model' -%}
+                  <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                    {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+      {% when 'layout-2' %}
+        <div
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="md:grid gap-2.5 {% if product.media.size > 1 %}grid-cols-2{% endif %} sf__product-media-lists">
+            {%- for media in product.media -%}
+              {%- assign remainder = forloop.index0 | modulo: 3 -%}
+              <div
+                class="sf-prod-media-item media-type-{{ media.media_type }} overflow-hidden relative group {% if remainder == 0 or product.media.size < 3 %}col-span-2{% endif %}"
+                data-index="{{ forloop.index0 }}"
+                data-media-type="{{ media.media_type }}"
+              >
+                {% render 'product-thumbnail',
+                  media: media,
+                  index: forloop.index0,
+                  autoplay: enable_video_autoplay,
+                  loop: true,
+                %}
+                {%- if enable_zoom and media.media_type != 'model' -%}
+                  <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                    {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+      {% when 'layout-3' %}
+        <div
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="grid gap-2.5 {% if product.media.size > 1 %}grid-cols-2{% endif %} sf__product-media-lists">
+            {%- for media in product.media -%}
+              {%- assign remainder = forloop.index0 | modulo: 3 -%}
+              <div
+                class="sf-prod-media-item media-type-{{ media.media_type }} overflow-hidden relative"
+                data-index="{{ forloop.index0 }}"
+                data-media-type="{{ media.media_type }}"
+              >
+                {% render 'product-thumbnail',
+                  media: media,
+                  index: forloop.index0,
+                  autoplay: enable_video_autoplay,
+                  loop: true,
+                %}
+                {%- if enable_zoom and media.media_type != 'model' -%}
+                  <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                    {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                  </div>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        </div>
+      {% when 'layout-4' %}
+        {% assign aspect_ratio = product.featured_media.aspect_ratio | default: 1 %}
+        <div
+          class="sf-pis__wrapper overflow-hidden w-full"
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="sf-preview__wrapper mb-4 flex-grow">
+            <div class="{{ wrapper_class }} h-full group {{ swiper_class }}">
+              <div class="swiper-wrapper main-slider sf-pis h-full">
+                {% for media in product.media %}
+                  <div
+                    class="swiper-slide sf-prod-media-item relative overflow-hidden media-type-{{ media.media_type }}"
+                    data-index="{{ forloop.index0 }}"
+                    data-media-type="{{ media.media_type }}"
+                    data-media-id="{{ media.id }}"
+                    data-aspect-ratio="{{ media.aspect_ratio | default: '1' }}"
+                  >
+                    {% render 'product-thumbnail',
+                      media: media,
+                      index: forloop.index0,
+                      autoplay: enable_video_autoplay,
+                      loop: true,
+                    %}
+                    {%- if enable_zoom and media.media_type != 'model' -%}
+                      <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                        {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </div>
+              {% if show_nav and product.media.size > 1 %}
+                <div class="absolute z-10 pointer-events-none inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-4">
+                  <button class="swiper-button-control swiper-button-prev sf__btn-icon">
+                    <svg
+                      width="14px"
+                      height="14px"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/>
+                    </svg>
+                  </button>
+                  <button class="swiper-button-control swiper-button-next sf__btn-icon">
+                    <svg
+                      fill="currentColor"
+                      width="14px"
+                      height="14px"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% if show_thumbnails and product.media.size > 1 %}
+            <div class="sf-media-nav">
+              <div class="nav-swiper-container flex items-stretch sf-no-scroll-bar opacity-0 transition-all">
+                <div class="swiper-wrapper flex flex-nowrap w-auto max-w-none" style="min-width: 70px;">
+                  {% for media in product.media %}
+                    {% assign aspect_ratio = media.preview_image.aspect_ratio | default: 1 %}
+                    <div
+                      class="swiper-slide relative cursor-pointer media-type-{{ media.media_type }}"
+                      data-index="{{ forloop.index0 }}"
+                      {%- if product_layout == 'layout-6' -%}
+                        style="--slide-height: {{ 70 | divided_by: aspect_ratio }}px;"
+                      {%- endif -%}
+                    >
+                      {% render 'product-thumbnail', media: media, thumbnail: true %}
+                      {% if media.media_type contains 'video' %}
+                        <div class="absolute right-0 top-0 text-white bg-gray-800 p-1 rounded-sm">
+                          <svg
+                            class="w-[16px] h-[16px]"
+                            fill="currentColor"
+                            stroke="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 576 512"
+                          >
+                            <path d="M543.9 96c-6.2 0-12.5 1.8-18.2 5.7L416 171.6v-59.8c0-26.4-23.2-47.8-51.8-47.8H51.8C23.2 64 0 85.4 0 111.8v288.4C0 426.6 23.2 448 51.8 448h312.4c28.6 0 51.8-21.4 51.8-47.8v-59.8l109.6 69.9c5.7 4 12.1 5.7 18.2 5.7 16.6 0 32.1-13 32.1-31.5v-257c.1-18.5-15.4-31.5-32-31.5zM384 400.2c0 8.6-9.1 15.8-19.8 15.8H51.8c-10.7 0-19.8-7.2-19.8-15.8V111.8c0-8.6 9.1-15.8 19.8-15.8h312.4c10.7 0 19.8 7.2 19.8 15.8v288.4zm160-15.7l-1.2-1.3L416 302.4v-92.9L544 128v256.5z"/>
+                          </svg>
+                        </div>
+                      {% endif %}
+                      {% if media.media_type == 'model' %}
+                        <div class="absolute right-0 top-0 text-white bg-gray-800 p-1 rounded-sm">
+                          <svg
+                            class="w-[16px] h-[16px]"
+                            fill="currentColor"
+                            stroke="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 512 512"
+                          >
+                            <path d="M239.1 6.3l-208 78c-18.7 7-31.1 25-31.1 45v225.1c0 18.2 10.3 34.8 26.5 42.9l208 104c13.5 6.8 29.4 6.8 42.9 0l208-104c16.3-8.1 26.5-24.8 26.5-42.9V129.3c0-20-12.4-37.9-31.1-44.9l-208-78C262 2.2 250 2.2 239.1 6.3zM256 34.2l224 84v.3l-224 97.1-224-97.1v-.3l224-84zM32 153.4l208 90.1v224.7l-208-104V153.4zm240 314.8V243.5l208-90.1v210.9L272 468.2z"/>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+          {% if show_pagination and product.media.size > 1 %}
+            <div class="swiper-pagination"></div>
+          {% endif %}
+        </div>
+      {% when 'layout-5' %}
+        {% assign aspect_ratio = product.featured_media.aspect_ratio | times: 2 %}
+        <div
+          class="sf-pis__wrapper overflow-hidden w-full"
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="sf-preview__wrapper mb-4 flex-grow">
+            <div class="{{ wrapper_class }} h-full group {{ swiper_class }}">
+              <div class="swiper-wrapper main-slider sf-pis h-full">
+                {% for media in product.media %}
+                  <div
+                    class="swiper-slide sf-prod-media-item relative overflow-hidden media-type-{{ media.media_type }}"
+                    data-index="{{ forloop.index0 }}"
+                    data-media-type="{{ media.media_type }}"
+                    data-media-id="{{ media.id }}"
+                    data-aspect-ratio="{{ media.aspect_ratio | default: '1' }}"
+                  >
+                    {% render 'product-thumbnail',
+                      media: media,
+                      index: forloop.index0,
+                      autoplay: enable_video_autoplay,
+                      loop: true
+                    %}
+                    {%- if enable_zoom and media.media_type != 'model' -%}
+                      <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                        {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </div>
+              {% if show_nav and product.media.size > 1 %}
+                <div class="absolute z-10 pointer-events-none inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-4">
+                  <button class="swiper-button-control swiper-button-prev sf__btn-icon">
+                    <svg
+                      width="14px"
+                      height="14px"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/>
+                    </svg>
+                  </button>
+                  <button class="swiper-button-control swiper-button-next sf__btn-icon">
+                    <svg
+                      fill="currentColor"
+                      width="14px"
+                      height="14px"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% if show_dots and product.media.size > 1 %}
+            <div class="swiper-pagination"></div>
+          {% endif %}
+        </div>
+      {% when 'layout-6' %}
+        {% assign aspect_ratio = product.preview_media.aspect_ratio %}
+        <div
+          class="sf-pis__wrapper overflow-hidden w-full"
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          <div class="sf-preview__wrapper mb-4 flex-grow">
+            <div class="{{ wrapper_class }} h-full group {{ swiper_class }}">
+              <div class="swiper-wrapper main-slider sf-pis h-full">
+                {% for media in product.media %}
+                  <div
+                    class="swiper-slide sf-prod-media-item relative overflow-hidden media-type-{{ media.media_type }}"
+                    data-index="{{ forloop.index0 }}"
+                    data-media-type="{{ media.media_type }}"
+                    data-media-id="{{ media.id }}"
+                    data-aspect-ratio="{{ media.aspect_ratio | default: '1' }}"
+                  >
+                    {% render 'product-thumbnail',
+                      media: media,
+                      index: forloop.index0,
+                      autoplay: enable_video_autoplay,
+                      loop: true
+                    %}
+                    {%- if enable_zoom and media.media_type != 'model' -%}
+                      <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                        {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </div>
+              {% if show_nav and product.media.size > 1 %}
+                <div class="absolute z-10 pointer-events-none inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-between px-4">
+                  <button class="swiper-button-control swiper-button-prev sf__btn-icon">
+                    <svg
+                      width="14px"
+                      height="14px"
+                      fill="currentColor"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/>
+                    </svg>
+                  </button>
+                  <button class="swiper-button-control swiper-button-next sf__btn-icon">
+                    <svg
+                      fill="currentColor"
+                      width="14px"
+                      height="14px"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 448 512"
+                    >
+                      <path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/>
+                    </svg>
+                  </button>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+          {% if show_thumbnails and product.media.size > 1 %}
+            <div class="sf-media-nav">
+              <div class="nav-swiper-container flex items-stretch sf-no-scroll-bar opacity-0 transition-all">
+                <div class="swiper-wrapper flex flex-nowrap w-auto max-w-none" style="min-width: 70px;">
+                  {% for media in product.media %}
+                    {% assign aspect_ratio = media.preview_image.aspect_ratio | default: 1 %}
+                    <div
+                      class="swiper-slide relative cursor-pointer media-type-{{ media.media_type }}"
+                      data-index="{{ forloop.index0 }}"
+                      style="--slide-height: {{ 70 | divided_by: aspect_ratio }}px;"
+                    >
+                      {% render 'product-thumbnail', media: media, thumbnail: true %}
+                      {% if media.media_type contains 'video' %}
+                        <div class="absolute right-0 top-0 text-white bg-gray-800 p-1 rounded-sm">
+                          <svg
+                            class="w-[16px] h-[16px]"
+                            fill="currentColor"
+                            stroke="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 576 512"
+                          >
+                            <path d="M543.9 96c-6.2 0-12.5 1.8-18.2 5.7L416 171.6v-59.8c0-26.4-23.2-47.8-51.8-47.8H51.8C23.2 64 0 85.4 0 111.8v288.4C0 426.6 23.2 448 51.8 448h312.4c28.6 0 51.8-21.4 51.8-47.8v-59.8l109.6 69.9c5.7 4 12.1 5.7 18.2 5.7 16.6 0 32.1-13 32.1-31.5v-257c.1-18.5-15.4-31.5-32-31.5zM384 400.2c0 8.6-9.1 15.8-19.8 15.8H51.8c-10.7 0-19.8-7.2-19.8-15.8V111.8c0-8.6 9.1-15.8 19.8-15.8h312.4c10.7 0 19.8 7.2 19.8 15.8v288.4zm160-15.7l-1.2-1.3L416 302.4v-92.9L544 128v256.5z"/>
+                          </svg>
+                        </div>
+                      {% endif %}
+                      {% if media.media_type == 'model' %}
+                        <div class="absolute right-0 top-0 text-white bg-gray-800 p-1 rounded-sm">
+                          <svg
+                            class="w-[16px] h-[16px]"
+                            fill="currentColor"
+                            stroke="currentColor"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 512 512"
+                          >
+                            <path d="M239.1 6.3l-208 78c-18.7 7-31.1 25-31.1 45v225.1c0 18.2 10.3 34.8 26.5 42.9l208 104c13.5 6.8 29.4 6.8 42.9 0l208-104c16.3-8.1 26.5-24.8 26.5-42.9V129.3c0-20-12.4-37.9-31.1-44.9l-208-78C262 2.2 250 2.2 239.1 6.3zM256 34.2l224 84v.3l-224 97.1-224-97.1v-.3l224-84zM32 153.4l208 90.1v224.7l-208-104V153.4zm240 314.8V243.5l208-90.1v210.9L272 468.2z"/>
+                          </svg>
+                        </div>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div
+          class="sf-pis__wrapper mb-8 relative"
+          {% if enableLoadingMedia %}
+            style="opacity: 0;"
+          {% endif %}
+        >
+          {% if product.media.size <= 3 %}
+            <div class="flex justify-center items-center mx-auto">
+              {% for media in product.media %}
+                <div
+                  class="sf-prod-media-item relative overflow-hidden media-type-{{ media.media_type }}"
+                  data-index="{{ forloop.index0 }}"
+                  data-media-type="{{ media.media_type }}"
+                  data-media-id="{{ media.id }}"
+                  style="width: 33.33%"
+                >
+                  {% render 'product-thumbnail',
+                    media: media,
+                    index: forloop.index0,
+                    autoplay: enable_video_autoplay,
+                    loop: true
+                  %}
+                  {%- if enable_zoom and media.media_type != 'model' -%}
+                    <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                      {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                    </div>
+                  {%- endif -%}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            {% assign aspect_ratio = product.featured_media.aspect_ratio | times: 3 %}
+            <div class="swiper-container {{ swiper_class }}">
+              <div class="swiper-wrapper main-slider">
+                {% for media in product.media %}
+                  <div
+                    class="swiper-slide sf-prod-media-item relative overflow-hidden media-type-{{ media.media_type }}"
+                    data-index="{{ forloop.index0 }}"
+                    data-media-type="{{ media.media_type }}"
+                    data-media-id="{{ media.id }}"
+                  >
+                    {% render 'product-thumbnail',
+                      media: media,
+                      index: forloop.index0,
+                      autoplay: enable_video_autoplay,
+                      loop: true
+                    %}
+                    {%- if enable_zoom and media.media_type != 'model' -%}
+                      <div class="zoom-in transition-all opacity-100 md:opacity-0 absolute z-10 {{ position | default: '-right-14 top-5' }}">
+                        {% render 'tooltip', type: 'zoom-in', class_name: ' sf__tooltip-left' %}
+                      </div>
+                    {%- endif -%}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="absolute z-10 inset-x-0 top-1/2 flex items-center justify-between px-4 pointer-events-none">
+              <button class="swiper-button-control sf__btn-icon swiper-button-prev pointer-events-auto">
+                <svg
+                  width="14px"
+                  height="14px"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                >
+                  <path d="M229.9 473.899l19.799-19.799c4.686-4.686 4.686-12.284 0-16.971L94.569 282H436c6.627 0 12-5.373 12-12v-28c0-6.627-5.373-12-12-12H94.569l155.13-155.13c4.686-4.686 4.686-12.284 0-16.971L229.9 38.101c-4.686-4.686-12.284-4.686-16.971 0L3.515 247.515c-4.686 4.686-4.686 12.284 0 16.971L212.929 473.9c4.686 4.686 12.284 4.686 16.971-.001z"/>
+                </svg>
+              </button>
+              <button class="swiper-button-control sf__btn-icon swiper-button-next pointer-events-auto">
+                <svg
+                  fill="currentColor"
+                  width="14px"
+                  height="14px"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 448 512"
+                >
+                  <path d="M218.101 38.101L198.302 57.9c-4.686 4.686-4.686 12.284 0 16.971L353.432 230H12c-6.627 0-12 5.373-12 12v28c0 6.627 5.373 12 12 12h341.432l-155.13 155.13c-4.686 4.686-4.686 12.284 0 16.971l19.799 19.799c4.686 4.686 12.284 4.686 16.971 0l209.414-209.414c4.686-4.686 4.686-12.284 0-16.971L235.071 38.101c-4.686-4.687-12.284-4.687-16.97 0z"/>
+                </svg>
+              </button>
+            </div>
+          {% endif %}
+        </div>
+    {% endcase %}
+  </media-gallery>
+{% else %}
+  {{ 'product-1' | placeholder_svg_tag: 'sf__placeholder-svg' }}
+{% endif %}

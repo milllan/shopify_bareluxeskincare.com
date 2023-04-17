@@ -1,0 +1,13 @@
+{%- if rest_values > 0 -%}
+<div 
+  class="{{ class }} rest-values sf-pqv__button" 
+  data-product-handle="{{ product_handle }}"
+>
+  <div class="sf__tooltip-item sf__tooltip-top">
+    <span class="text-base">+{{ rest_values }}</span>
+    <span class="sf__tooltip-content">
+      {% render 'new-locale', key: 'products.product.see_more_options', param: '{{ count }}', value: rest_values  %}
+    </span>
+  </div>
+</div>
+{%- endif -%}

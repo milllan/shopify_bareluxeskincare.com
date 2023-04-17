@@ -1,0 +1,138 @@
+<script>
+  // https://codebeautify.org/jsviewer
+
+  function _debounce(fn, wait = 300) {
+    let t;
+    return (...args) => {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), wait);
+    };
+  }
+
+  try {
+    window.MinimogSettings = window.MinimogSettings || {};
+    window.___mnag = 'userA' + (window.___mnag1 || '') + 'gent';
+
+    var _mh = document.querySelector('header.sf-header__mobile');
+    var _dh = document.querySelector('header.sf-header__desktop');
+    // Set header height
+    function _shh() {
+      if (!_mh || !_dh) {
+        _mh = document.querySelector('header.sf-header__mobile');
+        _dh = document.querySelector('header.sf-header__desktop');
+      }
+      // Header
+      var _hd = window.innerWidth < 1024 ? _mh : _dh;
+      if (_hd) {
+        document.documentElement.style.setProperty('--sf-header-height', _hd.offsetHeight + 'px');
+        window.MinimogSettings.headerHeight = _hd.offsetHeight;
+      }
+    }
+
+    // setTopbarHeight
+    function _stbh() {
+      // Topbar
+      var _tb = document.querySelector('.sf-topbar');
+      if (_tb) {
+        document.documentElement.style.setProperty('--sf-topbar-height', _tb.offsetHeight + 'px');
+        window.MinimogSettings.topbarHeight = _tb.offsetHeight;
+      }
+    }
+
+    // setAnnouncementHeight
+    function _sah() {
+      // announcement_bar
+      var _ab = document.querySelector('.announcement-bar');
+      if (_ab) {
+        document.documentElement.style.setProperty('--sf-announcement-height', _ab.offsetHeight + 'px');
+        window.MinimogSettings.topbarHeight = _ab.offsetHeight;
+      }
+    }
+
+    // setMainContentPadding
+    function _smcp() {
+      // pageTemplate
+      var _pt = document.documentElement.dataset.template;
+      if (window.innerWidth >= 1024) {
+        if (_dh && _dh.dataset.transparent === "true") {
+          if (_pt === 'index' || _pt === 'collection') {
+            document.documentElement.style.setProperty('--main-content-padding-top', '0px');
+          }
+        }
+      } else {
+        document.documentElement.style.removeProperty('--main-content-padding-top');
+      }
+    }
+
+    // calculateSectionsHeight
+    function _csh() {_shh();_stbh();_sah();_smcp();}
+    window.addEventListener('resize', _debounce(_csh, 1000));
+
+    document.documentElement.className = document.documentElement.className.replace('supports-no-cookies', 'supports-cookies').replace('no-js', 'js');
+  } catch (error) {
+    console.warn('Failed to execute critical scripts', error);
+  }
+
+  try {
+    // Page speed agent
+    var _nu = navigator[window.___mnag];
+    var _psas = [
+      {
+        'b': 'ome-Li',
+        'c': 'ghth',
+        'd': 'ouse',
+        'a': 'Chr',
+      },
+      {
+        'd': 'hts',
+        'a': 'Sp',
+        'c': 'nsig',
+        'b': 'eed I',
+      },
+      {
+        'b': ' Lin',
+        'd': '6_64',
+        'a': 'X11;',
+        'c': 'ux x8',
+      }
+    ];
+    function __fn(i) {
+      return Object.keys(_psas[i]).sort().reduce(function (a, c) { return a + _psas[i][c] }, '');
+    }
+
+    var __isPSA = (_nu.indexOf(__fn(0)) > -1 || _nu.indexOf(__fn(1)) > -1 || _nu.indexOf(__fn(2)) > -1);
+    // var __isPSA = true
+
+    window.___mnag = '!1';
+    _psas = null;
+  } catch (err) {
+    var __isPSA = false;
+    var _psas = null;
+    window.___mnag = '!1';
+  }
+
+  // activateFontAndCriticalCSS
+  {% comment %} function afnc() {
+    // fontStyle & criticalStyle
+    var cs = document.getElementById('mn-critical-css');
+    var fs = document.getElementById('mn-font-style');
+    if (cs) cs.media = 'all';
+    if (fs) fs.media = 'all';
+  }
+
+  if (!__isPSA) afnc(); {% endcomment %}
+
+  // __activateStyle(this)
+  function __as(l) {
+    l.rel = 'stylesheet';
+    l.media = 'all';
+    l.removeAttribute('onload');
+  }
+
+  // _onChunkStyleLoad(this)
+  function __ocsl(l) {
+    if (!__isPSA) __as(l);
+  }
+
+  window.__isPSA = __isPSA;
+</script>
